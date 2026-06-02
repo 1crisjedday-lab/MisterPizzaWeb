@@ -1,4 +1,3 @@
-
 # Mister Pizza Web
 
 Sistema integral de gestión de e-commerce y operaciones Kanban para pizzerías.
@@ -19,7 +18,7 @@ Mister Pizza Web es una aplicación web empresarial desarrollada en Java EE (Ser
    - Ejecuta el script SQL incluido en el archivo `/database/schema.sql` para crear las tablas.
 
 2. **Configuración del Proyecto:**
-   - Clona este repositorio: `git clone https://github.com/tu-usuario/MisterPizzaWeb.git`
+   - Clona este repositorio: `git clone https://github.com/1crisjedday-lab/MisterPizzaWeb.git`
    - Abre el proyecto en NetBeans o tu IDE de preferencia.
    - Asegúrate de agregar el Driver JDBC de PostgreSQL a las librerías del proyecto.
    - En la clase `config.Conexion.java`, ajusta las credenciales de tu base de datos (usuario y contraseña).
@@ -39,4 +38,4 @@ Mister Pizza Web es una aplicación web empresarial desarrollada en Java EE (Ser
 Este proyecto está bajo la licencia **MIT**. Consulta el archivo `LICENSE.txt` para más detalles.
 
 ## Soporte
-Si tienes dudas, contacta al desarrollador: [Tu correo aquí]
+Si tienes dudas, contacta al desarrollador: Cristhian Deyson Cahuana Chambi (1crisjedday@gmail.com)
