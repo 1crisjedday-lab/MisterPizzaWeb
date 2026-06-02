@@ -31,6 +31,11 @@ public class Conexion {
             
             if (dbUrl != null && !dbUrl.isEmpty()) {
                 finalUrl = dbUrl;
+                if (finalUrl.contains("@")) {
+                    con = DriverManager.getConnection(finalUrl);
+                    System.out.println("Conexión establecida correctamente usando JDBC_DATABASE_URL con credenciales embebidas.");
+                    return con;
+                }
                 if (dbUser != null) finalUser = dbUser;
                 if (dbPass != null) finalPass = dbPass;
             } else {
@@ -69,8 +74,10 @@ public class Conexion {
             
         } catch (ClassNotFoundException e) {
             System.err.println("Error: Driver de PostgreSQL no encontrado. " + e.getMessage());
+            e.printStackTrace();
         } catch (SQLException e) {
             System.err.println("Error al conectar a la base de datos: " + e.getMessage());
+            e.printStackTrace();
         }
         return con;
     }
