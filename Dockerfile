@@ -12,8 +12,14 @@ WORKDIR /usr/local/tomcat
 # Copy the built war file as ROOT.war to serve it at the root context path (/)
 COPY --from=build /app/target/*.war webapps/ROOT.war
 
-# Expose port 8080 (handled dynamically at runtime by Railway PORT environment variable)
+# Replace port="8080" with port="${http.port}" in server.xml
+RUN sed -i 's/port="8080"/port="${http.port}"/g' conf/server.xml
+
+# Create setenv.sh to pass the Railway dynamic $PORT env variable as the http.port system property
+RUN echo 'export CATALINA_OPTS="$CATALINA_OPTS -Dhttp.port=${PORT:-8080}"' > bin/setenv.sh && chmod +x bin/setenv.sh
+
+# Expose port 8080 (fallback/default)
 EXPOSE 8080
 
-# Replace the default port 8080 with Railway's dynamic PORT variable in server.xml, then start Tomcat
-CMD ["sh", "-c", "sed -i \"s/port=\\\"8080\\\"/port=\\\"${PORT:-8080}\\\"/g\" conf/server.xml && catalina.sh run"]
+# Run Tomcat using the default entrypoint command
+CMD ["catalina.sh", "run"]
