@@ -1,42 +1,76 @@
--- Creación de la base de datos
-CREATE DATABASE mister_pizza;
-
--- Conectarse a la base de datos (si usas consola)
-\c mister_pizza;
+-- Eliminación de tablas si existen (en orden inverso de dependencias)
+DROP TABLE IF EXISTS detalle_pedidos CASCADE;
+DROP TABLE IF EXISTS pedidos CASCADE;
+DROP TABLE IF EXISTS pizzas CASCADE;
+DROP TABLE IF EXISTS usuarios CASCADE;
 
 -- Tabla de Usuarios
 CREATE TABLE usuarios (
     id SERIAL PRIMARY KEY,
-    nombre VARCHAR(100),
-    email VARCHAR(100) UNIQUE,
+    nombre VARCHAR(100) NOT NULL,
+    correo VARCHAR(100) UNIQUE NOT NULL,
     dni VARCHAR(8),
-    password VARCHAR(100),
-    rol VARCHAR(20) DEFAULT 'cliente'
+    clave VARCHAR(100) NOT NULL,
+    rol_id INT DEFAULT 1 -- 1: Cliente, 2: Cocinero, 3: Administrador
+);
+
+-- Tabla de Pizzas (Reemplaza a la antigua tabla 'productos')
+CREATE TABLE pizzas (
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    precio DECIMAL(10,2) NOT NULL,
+    ingredientes TEXT,
+    imagen_url VARCHAR(255) DEFAULT 'img/default.png',
+    categoria VARCHAR(50) DEFAULT 'Pizzas Clásicas',
+    disponible BOOLEAN DEFAULT TRUE
 );
 
 -- Tabla de Pedidos
 CREATE TABLE pedidos (
     id SERIAL PRIMARY KEY,
-    usuario_id INT REFERENCES usuarios(id),
-    total DECIMAL(10,2),
-    direccion VARCHAR(200),
+    usuario_id INT REFERENCES usuarios(id) ON DELETE CASCADE,
+    total DECIMAL(10,2) NOT NULL,
+    direccion VARCHAR(200) NOT NULL,
+    metodo_pago VARCHAR(50),
     estado VARCHAR(20) DEFAULT 'Pendiente',
     fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Tabla de Productos
-CREATE TABLE productos (
-    id SERIAL PRIMARY KEY,
-    nombre VARCHAR(100),
-    precio DECIMAL(10,2),
-    descripcion TEXT
 );
 
 -- Tabla de Detalle de Pedidos
 CREATE TABLE detalle_pedidos (
     id SERIAL PRIMARY KEY,
-    pedido_id INT REFERENCES pedidos(id),
-    producto_nombre VARCHAR(100),
-    precio DECIMAL(10,2),
-    cantidad INT
+    pedido_id INT REFERENCES pedidos(id) ON DELETE CASCADE,
+    producto_nombre VARCHAR(100) NOT NULL,
+    descripcion TEXT, -- Guarda la personalización o ingredientes del ítem
+    precio DECIMAL(10,2) NOT NULL,
+    cantidad INT NOT NULL
 );
+
+-- =========================================================================
+-- DATOS INICIALES DE PRUEBA (SEEDS)
+-- =========================================================================
+
+-- Usuarios por defecto
+-- 1. Administrador (Clave: admin123)
+INSERT INTO usuarios (nombre, correo, dni, clave, rol_id) 
+VALUES ('Administrador', 'admin@misterpizza.com', '00000000', 'admin123', 3)
+ON CONFLICT (correo) DO NOTHING;
+
+-- 2. Cocinero (Clave: cocinero123)
+INSERT INTO usuarios (nombre, correo, dni, clave, rol_id) 
+VALUES ('Cocinero de Turno', 'cocinero@misterpizza.com', '11111111', 'cocinero123', 2)
+ON CONFLICT (correo) DO NOTHING;
+
+-- 3. Cliente de Prueba (Clave: cliente123)
+INSERT INTO usuarios (nombre, correo, dni, clave, rol_id) 
+VALUES ('Cliente Demo', 'cliente@misterpizza.com', '22222222', 'cliente123', 1)
+ON CONFLICT (correo) DO NOTHING;
+
+
+-- Pizzas del Catálogo Inicial
+INSERT INTO pizzas (nombre, precio, ingredientes, imagen_url, categoria, disponible) VALUES
+('Pizza Pepperoni', 12.90, 'Queso mozzarella, abundante pepperoni y salsa de tomate artesanal.', 'img/default.png', 'Pizzas Clásicas', TRUE),
+('Pizza Hawaiana', 13.50, 'Jamón inglés, piña caramelizada, queso mozzarella y salsa de tomate.', 'img/default.png', 'Pizzas Clásicas', TRUE),
+('Pizza Suprema', 15.90, 'Carne de res, pepperoni, pimiento verde, cebolla blanca y champiñones.', 'img/default.png', 'Pizzas Especiales', TRUE),
+('Pizza Margherita', 11.00, 'Hojas de albahaca fresca, queso mozzarella premium y aceite de oliva virgen.', 'img/default.png', 'Pizzas Clásicas', TRUE),
+('Pizza Vegana', 14.50, 'Queso vegano, champiñones, pimiento, cebolla, aceitunas negras y tomate.', 'img/default.png', 'Pizzas Especiales', TRUE);
