@@ -1,0 +1,43 @@
+/* =========================================
+   Archivo Global: style.css - Mister Pizza
+   ========================================= */
+
+/* 1. Ocultar barra de scroll horizontal en el menú de categorías */
+.no-scrollbar::-webkit-scrollbar { 
+    display: none; 
+}
+.no-scrollbar { 
+    -ms-overflow-style: none; 
+    scrollbar-width: none; 
+}
+
+/* 2. Animación suave para las tarjetas de pizza en el catálogo */
+.pizza-card { 
+    transition: transform 0.2s ease, border-color 0.2s ease; 
+}
+.pizza-card:hover { 
+    transform: translateY(-5px); 
+    border-color: #dc2626; /* Borde rojo al pasar el mouse */
+}
+
+/* 3. Barra de desplazamiento vertical (Scrollbar) estilo Modo Oscuro */
+.custom-scrollbar::-webkit-scrollbar { 
+    height: 8px; 
+    width: 8px; 
+}
+.custom-scrollbar::-webkit-scrollbar-track { 
+    background: #18181b; 
+}
+.custom-scrollbar::-webkit-scrollbar-thumb { 
+    background: #dc2626; 
+    border-radius: 10px; 
+}
+
+/* 4. Animación de rebote (Usada en el seguimiento del pedido) */
+@keyframes bounce-short { 
+    0%, 100% { transform: translateY(0); } 
+    50% { transform: translateY(-10px); } 
+}
+.animate-bounce-short { 
+    animation: bounce-short 2s ease-in-out infinite; 
+}
