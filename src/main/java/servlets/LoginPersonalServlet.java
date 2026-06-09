@@ -23,7 +23,7 @@ public class LoginPersonalServlet extends HttpServlet {
         String email = request.getParameter("email");
         String clave = request.getParameter("password");
 
-        String sql = "SELECT id, nombre, rol_id FROM usuarios WHERE correo = ? AND clave = ?";
+        String sql = "SELECT id, nombre, telefono, rol_id, fecha_registro FROM usuarios WHERE correo = ? AND clave = ?";
 
         try (Connection con = Conexion.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -38,7 +38,14 @@ public class LoginPersonalServlet extends HttpServlet {
                     // FILTRO DE SEGURIDAD: Solo dejamos pasar al rol 2 (Cocinero) y 3 (Admin)
                     if (rolUsuario == 2 || rolUsuario == 3) {
                         
-                        Usuario usuario = new Usuario(rs.getInt("id"), rs.getString("nombre"), email, rolUsuario);
+                        Usuario usuario = new Usuario(
+                            rs.getInt("id"), 
+                            rs.getString("nombre"), 
+                            email, 
+                            rs.getString("telefono"), 
+                            rolUsuario, 
+                            rs.getTimestamp("fecha_registro")
+                        );
                         HttpSession session = request.getSession();
                         session.setAttribute("usuarioLogueado", usuario);
 

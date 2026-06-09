@@ -19,7 +19,7 @@ public class LoginCocineroServlet extends HttpServlet {
         String clave = request.getParameter("clave");
 
         try (Connection con = Conexion.getConnection()) {
-            String sql = "SELECT id, nombre, rol_id FROM usuarios WHERE correo = ? AND clave = ?";
+            String sql = "SELECT id, nombre, telefono, rol_id, fecha_registro FROM usuarios WHERE correo = ? AND clave = ?";
             PreparedStatement ps = con.prepareStatement(sql);
             ps.setString(1, correo);
             ps.setString(2, clave);
@@ -30,7 +30,14 @@ public class LoginCocineroServlet extends HttpServlet {
                 int rolId = rs.getInt("rol_id");
                 
                 if (rolId == 2 || rolId == 3) {
-                    Usuario user = new Usuario(rs.getInt("id"), rs.getString("nombre"), correo, rolId);
+                    Usuario user = new Usuario(
+                        rs.getInt("id"), 
+                        rs.getString("nombre"), 
+                        correo, 
+                        rs.getString("telefono"), 
+                        rolId, 
+                        rs.getTimestamp("fecha_registro")
+                    );
                     request.getSession().setAttribute("usuarioLogueado", user);
                     response.sendRedirect("cocina_kanban.jsp");
                 } else {

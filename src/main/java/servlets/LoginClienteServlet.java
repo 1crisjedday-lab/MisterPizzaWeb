@@ -23,8 +23,8 @@ public class LoginClienteServlet extends HttpServlet {
         String email = request.getParameter("email");
         String clave = request.getParameter("password");
 
-        // Consulta SQL básica para verificar el cliente
-        String sql = "SELECT id, nombre, rol_id FROM usuarios WHERE correo = ? AND clave = ?";
+        // Consulta SQL para verificar el cliente con sus datos completos
+        String sql = "SELECT id, nombre, telefono, rol_id, fecha_registro FROM usuarios WHERE correo = ? AND clave = ?";
 
         try (Connection con = Conexion.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -35,8 +35,15 @@ public class LoginClienteServlet extends HttpServlet {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     
-                    // 1. Iniciamos la sesión
-                    Usuario usuario = new Usuario(rs.getInt("id"), rs.getString("nombre"), email, rs.getInt("rol_id"));
+                    // 1. Iniciamos la sesión con el objeto Usuario completo
+                    Usuario usuario = new Usuario(
+                        rs.getInt("id"), 
+                        rs.getString("nombre"), 
+                        email, 
+                        rs.getString("telefono"), 
+                        rs.getInt("rol_id"), 
+                        rs.getTimestamp("fecha_registro")
+                    );
                     HttpSession session = request.getSession();
                     session.setAttribute("usuarioLogueado", usuario);
 
