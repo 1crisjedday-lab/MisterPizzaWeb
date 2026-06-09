@@ -29,6 +29,9 @@
                 <a href="admin_productos.jsp" class="flex items-center gap-3 px-4 py-3 text-zinc-400 hover:bg-zinc-900 hover:text-white rounded-md font-medium transition-colors">
                     📦 Gestionar Menú
                 </a>
+                <a href="GestionUsuariosServlet" class="flex items-center gap-3 px-4 py-3 text-zinc-400 hover:bg-zinc-900 hover:text-white rounded-md font-medium transition-colors">
+                    👥 Gestionar Usuarios
+                </a>
             </nav>
         </div>
         <div class="mt-4">

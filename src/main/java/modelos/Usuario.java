@@ -1,17 +1,21 @@
 package modelos;
 
+import java.sql.Timestamp;
+
 public class Usuario {
     
     private int id;
     private String nombre;
     private String correo;
+    private String telefono;
     private int rol_id;
+    private Timestamp fecha_registro;
 
     // 1. Constructor vacío (Obligatorio para que no te dé el error "no arguments")
     public Usuario() {
     }
 
-    // 2. Constructor con parámetros (El que ya tenías y Java estaba pidiendo)
+    // 2. Constructor original con parámetros
     public Usuario(int id, String nombre, String correo, int rol_id) {
         this.id = id;
         this.nombre = nombre;
@@ -19,7 +23,17 @@ public class Usuario {
         this.rol_id = rol_id;
     }
 
-    // 3. Métodos Getters y Setters (Obligatorios para leer y escribir datos)
+    // 3. Constructor completo con nuevos parámetros
+    public Usuario(int id, String nombre, String correo, String telefono, int rol_id, Timestamp fecha_registro) {
+        this.id = id;
+        this.nombre = nombre;
+        this.correo = correo;
+        this.telefono = telefono;
+        this.rol_id = rol_id;
+        this.fecha_registro = fecha_registro;
+    }
+
+    // 4. Métodos Getters y Setters
     public int getId() {
         return id;
     }
@@ -44,11 +58,27 @@ public class Usuario {
         this.correo = correo;
     }
 
+    public String getTelefono() {
+        return telefono;
+    }
+
+    public void setTelefono(String telefono) {
+        this.telefono = telefono;
+    }
+
     public int getRolId() {
         return rol_id;
     }
 
     public void setRolId(int rol_id) {
         this.rol_id = rol_id;
+    }
+
+    public Timestamp getFechaRegistro() {
+        return fecha_registro;
+    }
+
+    public void setFechaRegistro(Timestamp fecha_registro) {
+        this.fecha_registro = fecha_registro;
     }
 }

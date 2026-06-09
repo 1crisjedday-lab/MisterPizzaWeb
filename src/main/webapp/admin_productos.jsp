@@ -23,6 +23,9 @@
                 <a href="admin_productos.jsp" class="flex items-center gap-3 px-4 py-3 bg-red-600 text-white rounded-md font-bold transition-colors shadow-[0_0_10px_rgba(220,38,38,0.3)] whitespace-nowrap">
                     📦 Gestionar Catálogo
                 </a>
+                <a href="GestionUsuariosServlet" class="flex items-center gap-3 px-4 py-3 text-zinc-400 hover:bg-zinc-900 hover:text-white rounded-md font-medium transition-colors whitespace-nowrap">
+                    👥 Gestionar Usuarios
+                </a>
                 <a href="cocina_kanban.jsp" class="flex items-center gap-3 px-4 py-3 text-zinc-400 hover:bg-zinc-900 hover:text-white rounded-md font-medium transition-colors whitespace-nowrap">
                     👨‍🍳 Panel de Cocina
                 </a>
