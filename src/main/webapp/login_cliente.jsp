@@ -23,15 +23,21 @@
         <div class="bg-zinc-900/80 backdrop-blur-md p-8 rounded-2xl shadow-2xl border border-zinc-800">
             
             <% 
-                String error = (String) request.getAttribute("error");
+                String error = request.getParameter("error");
                 if (error != null) { 
+                    String msg = "Ocurrió un error en el sistema.";
+                    if ("credenciales".equals(error)) {
+                        msg = "Correo o contraseña incorrectos. Por favor, intente de nuevo.";
+                    } else if ("bd".equals(error)) {
+                        msg = "Error de conexión con la base de datos.";
+                    }
             %>
                 <div class="bg-red-500/10 border border-red-500/50 text-red-500 p-3 rounded-md text-sm font-bold text-center mb-6">
-                    <%= error %>
+                    <%= msg %>
                 </div>
             <% } %>
 
-            <form action="${pageContext.request.contextPath}/LoginClienteServlet" method="POST" class="space-y-6">
+            <form action="LoginClienteServlet" method="POST" class="space-y-6">
                 
                 <div>
                     <label class="block text-zinc-400 text-xs font-bold uppercase tracking-widest mb-2" for="email">Correo Electrónico</label>
