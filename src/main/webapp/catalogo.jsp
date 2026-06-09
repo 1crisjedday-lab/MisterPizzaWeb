@@ -506,17 +506,28 @@
         function selectPaymentMethod(method) {
             selectedPaymentMethodValue = method;
             const yapeBtn = document.getElementById('btnPayYape');
+            const cardBtn = document.getElementById('btnPayCard');
             const cashBtn = document.getElementById('btnPayCash');
+            
             const yapeForm = document.getElementById('drawerYapeForm');
+            const cardForm = document.getElementById('drawerCardForm');
+            
+            // Reset clases
+            yapeBtn.className = "py-2.5 border border-zinc-900 bg-zinc-900/40 text-zinc-500 rounded-xl text-[10px] font-bold uppercase tracking-wider text-center transition-all";
+            cardBtn.className = "py-2.5 border border-zinc-900 bg-zinc-900/40 text-zinc-500 rounded-xl text-[10px] font-bold uppercase tracking-wider text-center transition-all";
+            cashBtn.className = "py-2.5 border border-zinc-900 bg-zinc-900/40 text-zinc-500 rounded-xl text-[10px] font-bold uppercase tracking-wider text-center transition-all";
+            
+            yapeForm.classList.add('hidden');
+            cardForm.classList.add('hidden');
             
             if (method === 'Yape') {
-                yapeBtn.className = "py-3 border border-red-600 bg-red-600/10 text-red-500 rounded-xl text-xs font-black uppercase tracking-wider text-center transition-all";
-                cashBtn.className = "py-3 border border-zinc-900 bg-zinc-900/40 text-zinc-500 rounded-xl text-xs font-bold uppercase tracking-wider text-center transition-all";
+                yapeBtn.className = "py-2.5 border border-red-600 bg-red-600/10 text-red-500 rounded-xl text-[10px] font-black uppercase tracking-wider text-center transition-all";
                 yapeForm.classList.remove('hidden');
+            } else if (method === 'Tarjeta') {
+                cardBtn.className = "py-2.5 border border-red-600 bg-red-600/10 text-red-500 rounded-xl text-[10px] font-black uppercase tracking-wider text-center transition-all";
+                cardForm.classList.remove('hidden');
             } else {
-                cashBtn.className = "py-3 border border-red-600 bg-red-600/10 text-red-500 rounded-xl text-xs font-black uppercase tracking-wider text-center transition-all";
-                yapeBtn.className = "py-3 border border-zinc-900 bg-zinc-900/40 text-zinc-500 rounded-xl text-xs font-bold uppercase tracking-wider text-center transition-all";
-                yapeForm.classList.add('hidden');
+                cashBtn.className = "py-2.5 border border-red-600 bg-red-600/10 text-red-500 rounded-xl text-[10px] font-black uppercase tracking-wider text-center transition-all";
             }
         }
 
@@ -577,10 +588,21 @@
                 return;
             }
 
-            // Si es Yape, validar datos
-            let yapePhoneVal = "969929157";
-            let yapeOtpVal = "557454";
-            
+            // Datos dinámicos del usuario
+            let nombreCompleto = "<%= usuario.getNombre() %>";
+            let partes = nombreCompleto.split(" ");
+            let firstName = partes[0] || "Cliente";
+            let lastName = partes.slice(1).join(" ") || "Mister Pizza";
+            let email = "<%= usuario.getCorreo() %>";
+            let userPhone = "<%= usuario.getTelefono() %>" || "999835685";
+            if (userPhone === "Sin registro") userPhone = "999835685";
+
+            let totalVal = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
+            let totalCents = Math.round(totalVal * 100).toString();
+            let randomOp = Math.floor(1000000 + Math.random() * 9000000).toString();
+
+            let yapeRequestJson = {};
+
             if (selectedPaymentMethodValue === 'Yape') {
                 const phoneInput = document.getElementById('yapePhone').value.trim();
                 const otpInput = document.getElementById('yapeOtp').value.trim();
@@ -595,109 +617,222 @@
                     document.getElementById('yapeOtp').focus();
                     return;
                 }
-                yapePhoneVal = phoneInput;
-                yapeOtpVal = otpInput;
+                
+                yapeRequestJson = {
+                    "action": "authorize",
+                    "channel": "ecommerce",
+                    "merchant_code": "b0deb6f3-e51a-48a7-9268-f1441d46f7bd",
+                    "merchant_operation_number": randomOp,
+                    "payment_method": {
+                        "method_name": "YAPE",
+                        "method_details": {
+                            "callback_url": "https://pay-me.com/callback",
+                            "phone": {
+                                "country_code": "+51",
+                                "subscriber": phoneInput
+                            },
+                            "otp": otpInput
+                        }
+                    },
+                    "payment_details": {
+                        "amount": totalCents,
+                        "currency": "604",
+                        "billing": {
+                            "first_name": firstName,
+                            "last_name": lastName,
+                            "email": email,
+                            "phone": {
+                                "country_code": "+51",
+                                "subscriber": userPhone
+                            },
+                            "location": {
+                                "line_1": direccion,
+                                "line_2": "",
+                                "city": "Puno",
+                                "state": "Puno",
+                                "country": "Peru"
+                            }
+                        },
+                        "shipping": {
+                            "first_name": firstName,
+                            "last_name": lastName,
+                            "email": email,
+                            "phone": {
+                                "country_code": "+51",
+                                "subscriber": userPhone
+                            },
+                            "location": {
+                                "line_1": direccion,
+                                "line_2": "",
+                                "city": "Puno",
+                                "state": "Puno",
+                                "country": "Peru"
+                            }
+                        },
+                        "customer": {
+                            "first_name": firstName,
+                            "last_name": lastName,
+                            "email": email,
+                            "phone": {
+                                "country_code": "+51",
+                                "subscriber": userPhone
+                            },
+                            "location": {
+                                "line_1": direccion,
+                                "line_2": "",
+                                "city": "Puno",
+                                "state": "Puno",
+                                "country": "Peru"
+                            }
+                        },
+                        "product_details": carrito.map(item => ({
+                            "name": item.nombre,
+                            "quantity": item.cantidad.toString(),
+                            "price": Math.round(item.precio * 100).toString()
+                        }))
+                    }
+                };
+            } else if (selectedPaymentMethodValue === 'Tarjeta') {
+                const panInput = document.getElementById('cardPan').value.trim();
+                const expiryInput = document.getElementById('cardExpiry').value.trim();
+                const cvvInput = document.getElementById('cardCvv').value.trim();
+                const installmentsNum = document.getElementById('cardInstallments').value;
+
+                if (panInput.length !== 16 || isNaN(panInput)) {
+                    alert("💳 Por favor ingresa un número de tarjeta válido (16 dígitos).");
+                    document.getElementById('cardPan').focus();
+                    return;
+                }
+                if (expiryInput.length !== 4 || isNaN(expiryInput)) {
+                    alert("📅 Por favor ingresa la fecha de vencimiento (MMAA, ej: 1231).");
+                    document.getElementById('cardExpiry').focus();
+                    return;
+                }
+                if (cvvInput.length !== 3 || isNaN(cvvInput)) {
+                    alert("🔒 Por favor ingresa el código de seguridad CVV (3 dígitos).");
+                    document.getElementById('cardCvv').focus();
+                    return;
+                }
+
+                yapeRequestJson = {
+                    "action": "authorize",
+                    "channel": "ecommerce",
+                    "merchant_code": "b0deb6f3-e51a-48a7-9268-f1441d46f7bd",
+                    "merchant_operation_number": randomOp,
+                    "payment_method": {
+                        "method_name": "CARD",
+                        "method_details": {
+                            "pan": panInput,
+                            "expiry_date": expiryInput,
+                            "security_code": cvvInput,
+                            "card_holder": {
+                                "first_name": firstName,
+                                "last_name": lastName,
+                                "email": email,
+                                "phone": {
+                                    "prefix": "51",
+                                    "number": userPhone
+                                }
+                            },
+                            "installments": {
+                                "plan": "01",
+                                "number": installmentsNum
+                            }
+                        }
+                    },
+                    "payment_details": {
+                        "amount": totalCents,
+                        "currency": "604",
+                        "billing": {
+                            "first_name": firstName,
+                            "last_name": lastName,
+                            "email": email,
+                            "phone": {
+                                "country_code": "+51",
+                                "subscriber": userPhone
+                            },
+                            "location": {
+                                "line_1": direccion,
+                                "line_2": "",
+                                "city": "Puno",
+                                "state": "Puno",
+                                "country": "Peru"
+                            }
+                        },
+                        "shipping": {
+                            "first_name": firstName,
+                            "last_name": lastName,
+                            "email": email,
+                            "phone": {
+                                "country_code": "+51",
+                                "subscriber": userPhone
+                            },
+                            "location": {
+                                "line_1": direccion,
+                                "line_2": "",
+                                "city": "Puno",
+                                "state": "Puno",
+                                "country": "Peru"
+                            }
+                        },
+                        "customer": {
+                            "first_name": firstName,
+                            "last_name": lastName,
+                            "email": email,
+                            "phone": {
+                                "country_code": "+51",
+                                "subscriber": userPhone
+                            },
+                            "location": {
+                                "line_1": direccion,
+                                "line_2": "",
+                                "city": "Puno",
+                                "state": "Puno",
+                                "country": "Peru"
+                            }
+                        },
+                        "product_details": carrito.map(item => ({
+                            "name": item.nombre,
+                            "quantity": item.cantidad.toString(),
+                            "price": Math.round(item.precio * 100).toString()
+                        }))
+                    }
+                };
             }
 
-            // Datos dinámicos del usuario
-            let nombreCompleto = "<%= usuario.getNombre() %>";
-            let partes = nombreCompleto.split(" ");
-            let firstName = partes[0] || "Cliente";
-            let lastName = partes.slice(1).join(" ") || "Mister Pizza";
-            let email = "<%= usuario.getCorreo() %>";
-            let userPhone = "<%= usuario.getTelefono() %>" || "999835685";
-            if (userPhone === "Sin registro") userPhone = "999835685";
-
-            // Monto total en centavos
-            let totalVal = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
-            let totalCents = Math.round(totalVal * 100).toString();
-            let randomOp = Math.floor(1000000 + Math.random() * 9000000).toString();
-
-            // Construir la carga útil JSON (API Yape requerida)
-            let yapeRequestJson = {
-                "action": "authorize",
-                "channel": "ecommerce",
-                "merchant_code": "b0deb6f3-e51a-48a7-9268-f1441d46f7bd",
-                "merchant_operation_number": randomOp,
-                "payment_method": {
-                    "method_name": "YAPE",
-                    "method_details": {
-                        "callback_url": "https://pay-me.com/callback",
-                        "phone": {
-                            "country_code": "+51",
-                            "subscriber": yapePhoneVal
-                        },
-                        "otp": yapeOtpVal
-                    }
-                },
-                "payment_details": {
-                    "amount": totalCents,
-                    "currency": "604",
-                    "billing": {
-                        "first_name": firstName,
-                        "last_name": lastName,
-                        "email": email,
-                        "phone": {
-                            "country_code": "+51",
-                            "subscriber": userPhone
-                        },
-                        "location": {
-                            "line_1": direccion,
-                            "line_2": "",
-                            "city": "Puno",
-                            "state": "Puno",
-                            "country": "Peru"
-                        }
-                    },
-                    "shipping": {
-                        "first_name": firstName,
-                        "last_name": lastName,
-                        "email": email,
-                        "phone": {
-                            "country_code": "+51",
-                            "subscriber": userPhone
-                        },
-                        "location": {
-                            "line_1": direccion,
-                            "line_2": "",
-                            "city": "Puno",
-                            "state": "Puno",
-                            "country": "Peru"
-                        }
-                    },
-                    "customer": {
-                        "first_name": firstName,
-                        "last_name": lastName,
-                        "email": email,
-                        "phone": {
-                            "country_code": "+51",
-                            "subscriber": userPhone
-                        },
-                        "location": {
-                            "line_1": direccion,
-                            "line_2": "",
-                            "city": "Puno",
-                            "state": "Puno",
-                            "country": "Peru"
-                        }
-                    },
-                    "product_details": carrito.map(item => ({
-                        "name": item.nombre,
-                        "quantity": item.cantidad.toString(),
-                        "price": Math.round(item.precio * 100).toString()
-                    }))
-                }
-            };
-
-            // Mostrar el cargador y volcar el JSON
+            // Mostrar cargador
             const loader = document.getElementById('drawerLoader');
+            const loaderTitle = document.getElementById('loaderTitleText');
+            const loaderSub = document.getElementById('loaderSubText');
             const pre = document.getElementById('apiPayloadText');
+            
+            if (selectedPaymentMethodValue === 'Efectivo') {
+                // Efectivo no requiere API externa
+                const datosSeguros = carrito.map(item => {
+                    return item.nombre + "|" + item.ingredientes + "|" + item.precio + "|" + item.cantidad;
+                }).join("||");
+
+                localStorage.removeItem('misterPizzaCarrito');
+                document.getElementById('directoDireccion').value = direccion;
+                document.getElementById('directoMetodo').value = "Efectivo";
+                
+                // Guardar y redireccionar
+                fetch('GuardarCarritoServlet', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+                    body: 'carritoJson=' + encodeURIComponent(datosSeguros)
+                }).then(() => {
+                    document.getElementById('formCheckoutDirecto').submit();
+                });
+                return;
+            }
+
+            loaderTitle.innerText = selectedPaymentMethodValue === 'Yape' ? 'Autorizando Transacción Yape' : 'Procesando Pago con Tarjeta';
+            loaderSub.innerText = 'Conectando con la pasarela de pagos Pay-Me...';
             pre.innerText = JSON.stringify(yapeRequestJson, null, 4);
             loader.classList.remove('hidden');
 
-            // Simular validación remota del API Pay-Me / Yape
             setTimeout(() => {
-                // Proceder con guardar el carrito en la sesión por Fetch (AJAX)
                 const datosSeguros = carrito.map(item => {
                     return item.nombre + "|" + item.ingredientes + "|" + item.precio + "|" + item.cantidad;
                 }).join("||");
@@ -710,15 +845,13 @@
                     body: 'carritoJson=' + encodeURIComponent(datosSeguros)
                 })
                 .then(res => {
-                    // Limpiar el carrito local tras ordenar
                     localStorage.removeItem('misterPizzaCarrito');
-                    // Enviar y finalizar pedido en base de datos
                     document.getElementById('directoDireccion').value = direccion;
                     document.getElementById('directoMetodo').value = selectedPaymentMethodValue;
                     document.getElementById('formCheckoutDirecto').submit();
                 })
                 .catch(err => {
-                    alert("Error simulando conexión de red. Inténtalo de nuevo.");
+                    alert("Error procesando pago.");
                     loader.classList.add('hidden');
                 });
             }, 3500);
@@ -735,14 +868,14 @@
     <div id="cartDrawerBackdrop" onclick="toggleCartDrawer(false)" class="hidden fixed inset-0 bg-black/60 z-50 backdrop-blur-sm transition-opacity duration-300"></div>
     <div id="cartDrawer" class="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-zinc-950 border-l border-zinc-900 shadow-2xl translate-x-full transition-transform duration-300 flex flex-col">
         
-        <!-- Loader Yape API -->
+        <!-- Loader Pay-Me APIs -->
         <div id="drawerLoader" class="hidden absolute inset-0 bg-black/95 z-50 flex flex-col items-center justify-center p-6 text-center">
             <div class="w-16 h-16 border-4 border-red-600 border-t-transparent rounded-full animate-spin mb-6"></div>
-            <h3 class="font-extrabold text-white text-lg mb-2 uppercase tracking-wider">Autorizando Transacción</h3>
-            <p class="text-xs text-zinc-500 max-w-xs mb-6">Conectando con la pasarela de pagos Pay-Me & API Yape...</p>
+            <h3 id="loaderTitleText" class="font-extrabold text-white text-lg mb-2 uppercase tracking-wider">Autorizando Transacción</h3>
+            <p id="loaderSubText" class="text-xs text-zinc-500 max-w-xs mb-6">Conectando con la pasarela de pagos Pay-Me...</p>
             
             <div class="w-full text-left space-y-3">
-                <span class="text-[9px] font-black text-red-500 uppercase tracking-widest block">Petición API Yape (payload):</span>
+                <span class="text-[9px] font-black text-red-500 uppercase tracking-widest block">Petición API Pay-Me (payload):</span>
                 <pre id="apiPayloadText" class="bg-zinc-900 border border-zinc-800 text-green-400 p-4 rounded-xl text-[10px] font-mono overflow-auto max-h-56 select-all leading-tight"></pre>
             </div>
         </div>
@@ -772,9 +905,10 @@
             <!-- Método de pago -->
             <div>
                 <label class="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1.5">💳 Método de Pago</label>
-                <div class="grid grid-cols-2 gap-2">
-                    <button type="button" onclick="selectPaymentMethod('Yape')" id="btnPayYape" class="py-3 border border-red-600 bg-red-600/10 text-red-500 rounded-xl text-xs font-black uppercase tracking-wider text-center transition-all">📱 Yape</button>
-                    <button type="button" onclick="selectPaymentMethod('Efectivo')" id="btnPayCash" class="py-3 border border-zinc-900 bg-zinc-900/40 text-zinc-500 rounded-xl text-xs font-bold uppercase tracking-wider text-center transition-all">💵 Efectivo</button>
+                <div class="grid grid-cols-3 gap-1.5">
+                    <button type="button" onclick="selectPaymentMethod('Yape')" id="btnPayYape" class="py-2.5 border border-red-600 bg-red-600/10 text-red-500 rounded-xl text-[10px] font-black uppercase tracking-wider text-center transition-all">📱 Yape</button>
+                    <button type="button" onclick="selectPaymentMethod('Tarjeta')" id="btnPayCard" class="py-2.5 border border-zinc-900 bg-zinc-900/40 text-zinc-500 rounded-xl text-[10px] font-bold uppercase tracking-wider text-center transition-all">💳 Tarjeta</button>
+                    <button type="button" onclick="selectPaymentMethod('Efectivo')" id="btnPayCash" class="py-2.5 border border-zinc-900 bg-zinc-900/40 text-zinc-500 rounded-xl text-[10px] font-bold uppercase tracking-wider text-center transition-all">💵 Efectivo</button>
                 </div>
             </div>
 
@@ -795,6 +929,39 @@
                     </div>
                 </div>
                 <p class="text-[9px] text-zinc-500 leading-tight">Ingresa el celular asociado a tu cuenta Yape y el código OTP de 6 dígitos que figura en la aplicación.</p>
+            </div>
+
+            <!-- Formulario Tarjeta -->
+            <div id="drawerCardForm" class="hidden bg-zinc-950 border border-zinc-900 p-4 rounded-xl space-y-3">
+                <div class="flex items-center justify-between border-b border-zinc-900 pb-2">
+                    <span class="text-[10px] font-black text-zinc-400 uppercase tracking-wider">Detalles de Tarjeta</span>
+                    <span class="text-[9px] bg-red-600 text-white px-2 py-0.5 rounded font-black tracking-widest">CARD</span>
+                </div>
+                <div>
+                    <label class="block text-[8px] text-zinc-500 font-bold uppercase tracking-wider mb-1">Número de Tarjeta (PAN)</label>
+                    <input type="text" id="cardPan" maxlength="16" placeholder="4051420006041115" class="w-full bg-zinc-900 border border-zinc-800 text-white px-3 py-2 rounded-lg text-xs focus:border-red-600 focus:outline-none transition-colors font-mono" />
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                    <div class="col-span-1">
+                        <label class="block text-[8px] text-zinc-500 font-bold uppercase tracking-wider mb-1">Vence (MMAA)</label>
+                        <input type="text" id="cardExpiry" maxlength="4" placeholder="1231" class="w-full bg-zinc-900 border border-zinc-800 text-white px-3 py-2 rounded-lg text-xs focus:border-red-600 focus:outline-none transition-colors font-mono" />
+                    </div>
+                    <div class="col-span-1">
+                        <label class="block text-[8px] text-zinc-500 font-bold uppercase tracking-wider mb-1">CVV</label>
+                        <input type="password" id="cardCvv" maxlength="3" placeholder="123" class="w-full bg-zinc-900 border border-zinc-800 text-white px-3 py-2 rounded-lg text-xs focus:border-red-600 focus:outline-none transition-colors font-mono" />
+                    </div>
+                    <div class="col-span-1">
+                        <label class="block text-[8px] text-zinc-500 font-bold uppercase tracking-wider mb-1">Cuotas</label>
+                        <select id="cardInstallments" class="w-full bg-zinc-900 border border-zinc-800 text-white px-2 py-2 rounded-lg text-xs focus:border-red-600 focus:outline-none transition-colors font-bold">
+                            <option value="1">1 pago</option>
+                            <option value="2">2 cuotas</option>
+                            <option value="3">3 cuotas</option>
+                            <option value="6">6 cuotas</option>
+                            <option value="12">12 cuotas</option>
+                        </select>
+                    </div>
+                </div>
+                <p class="text-[9px] text-zinc-500 leading-tight">Tu información financiera viaja encriptada y protegida bajo el estándar PCI-DSS.</p>
             </div>
 
             <!-- Resumen de total y botón de pago -->
