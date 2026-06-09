@@ -216,8 +216,77 @@
         </div>
     </section>
 
-    <footer class="bg-black border-t border-zinc-900 py-8 text-center text-zinc-500 text-xs mt-10">
-        <p>&copy; <%= new java.text.SimpleDateFormat("yyyy").format(new java.util.Date()) %> Mister Pizza Web. Todos los derechos reservados.</p>
+    <!-- FOOTER PREMIUM Y MAPA DE GOOGLE -->
+    <footer class="bg-black border-t border-zinc-900 pt-16 pb-8 px-4 md:px-8 mt-20 relative z-10">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 text-sm text-zinc-400">
+            <!-- Columna 1: Empresa & RUC -->
+            <div class="space-y-4">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl animate-bounce-short">🍕</span>
+                    <span class="font-black text-lg italic tracking-widest uppercase text-white">
+                        Mister <span class="text-red-500">Pizza</span>
+                    </span>
+                </div>
+                <p class="leading-relaxed">
+                    La mejor pizzería artesanal de la región. Calidad, sabor y rapidez directo a tu mesa en minutos.
+                </p>
+                <div class="pt-2 text-xs space-y-1 font-semibold">
+                    <p class="text-zinc-500">Razón Social: <span class="text-zinc-300">MISTER PIZZA S.A.C.</span></p>
+                    <p class="text-zinc-500">RUC: <span class="text-zinc-300">20784918239</span></p>
+                </div>
+            </div>
+
+            <!-- Columna 2: Enlaces -->
+            <div class="space-y-4">
+                <h4 class="text-white font-black uppercase tracking-wider text-xs border-l-2 border-red-500 pl-3">Enlaces Rápidos</h4>
+                <ul class="space-y-2.5 font-bold">
+                    <li><a href="#" class="hover:text-red-500 transition-colors">Inicio</a></li>
+                    <li><a href="#menu-publico" class="hover:text-red-500 transition-colors">Carta / Menú</a></li>
+                    <li><a href="login_cliente.jsp" class="hover:text-red-500 transition-colors">Armar Pizza</a></li>
+                    <li><a href="login_personal.jsp" class="hover:text-red-500 transition-colors">Acceso Personal</a></li>
+                </ul>
+            </div>
+
+            <!-- Columna 3: Contacto -->
+            <div class="space-y-4">
+                <h4 class="text-white font-black uppercase tracking-wider text-xs border-l-2 border-red-500 pl-3">Contacto</h4>
+                <ul class="space-y-3">
+                    <li class="flex items-start gap-2.5">
+                        <span class="text-red-500">📍</span>
+                        <span>Av. El Sol 456, Puno, Perú</span>
+                    </li>
+                    <li class="flex items-start gap-2.5">
+                        <span class="text-red-500">📞</span>
+                        <span>+51 987 654 321</span>
+                    </li>
+                    <li class="flex items-start gap-2.5">
+                        <span class="text-red-500">⏰</span>
+                        <div>
+                            <p class="font-bold text-zinc-300">Lun - Dom</p>
+                            <p class="text-xs text-zinc-500">11:00 AM - 11:00 PM</p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Columna 4: Ubicación (Google Maps Embed) -->
+            <div class="space-y-4">
+                <h4 class="text-white font-black uppercase tracking-wider text-xs border-l-2 border-red-500 pl-3">Nuestra Ubicación</h4>
+                <div class="rounded-xl overflow-hidden border border-zinc-800 bg-zinc-950 h-40 shadow-inner group">
+                    <iframe 
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3839.8806297316715!2d-70.02998822579178!3d-15.840082724424915!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x915d6994cf5e1e9b%3A0x101b088e89547b74!2sPlaza%20Mayor%20de%20Puno!5e0!3m2!1ses!2spe!4v1717960000000!5m2!1ses!2spe" 
+                        class="w-full h-full border-0 grayscale invert opacity-75 group-hover:opacity-100 group-hover:grayscale-0 transition-all duration-500" 
+                        allowfullscreen="" 
+                        loading="lazy" 
+                        referrerpolicy="no-referrer-when-downgrade">
+                    </iframe>
+                </div>
+            </div>
+        </div>
+        
+        <div class="max-w-7xl mx-auto border-t border-zinc-900 mt-12 pt-8 text-center text-xs text-zinc-600 font-bold">
+            <p>&copy; <%= new java.text.SimpleDateFormat("yyyy").format(new java.util.Date()) %> Mister Pizza Web. Todos los derechos reservados.</p>
+        </div>
     </footer>
 
     <!-- BOTÓN FLOTANTE DEL CARRITO (QUE REDIRIGE A LOGIN PARA CONFIRMAR) -->
