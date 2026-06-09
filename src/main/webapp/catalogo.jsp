@@ -531,6 +531,28 @@
             }
         }
 
+        let selectedYapeSubOption = 'OTP';
+
+        function selectYapeOption(option) {
+            selectedYapeSubOption = option;
+            const otpBtn = document.getElementById('btnYapeOtp');
+            const qrBtn = document.getElementById('btnYapeQr');
+            const otpSection = document.getElementById('yapeOtpSection');
+            const qrSection = document.getElementById('yapeQrSection');
+
+            if (option === 'OTP') {
+                otpBtn.className = "py-1.5 rounded-md text-[9px] font-black uppercase tracking-wider text-center transition-all bg-[#742384] text-white";
+                qrBtn.className = "py-1.5 rounded-md text-[9px] font-black uppercase tracking-wider text-center transition-all text-zinc-400 hover:text-white";
+                otpSection.classList.remove('hidden');
+                qrSection.classList.add('hidden');
+            } else {
+                qrBtn.className = "py-1.5 rounded-md text-[9px] font-black uppercase tracking-wider text-center transition-all bg-[#742384] text-white";
+                otpBtn.className = "py-1.5 rounded-md text-[9px] font-black uppercase tracking-wider text-center transition-all text-zinc-400 hover:text-white";
+                qrSection.classList.remove('hidden');
+                otpSection.classList.add('hidden');
+            }
+        }
+
         function renderDrawerCart() {
             const container = document.getElementById('drawer-cart-items-container');
             const totalText = document.getElementById('drawerTotalText');
@@ -604,18 +626,32 @@
             let yapeRequestJson = {};
 
             if (selectedPaymentMethodValue === 'Yape') {
-                const phoneInput = document.getElementById('yapePhone').value.trim();
-                const otpInput = document.getElementById('yapeOtp').value.trim();
-                
-                if (phoneInput.length !== 9 || isNaN(phoneInput)) {
-                    alert("📱 Por favor ingresa un número de celular Yape válido (9 dígitos).");
-                    document.getElementById('yapePhone').focus();
-                    return;
-                }
-                if (otpInput.length !== 6 || isNaN(otpInput)) {
-                    alert("🔑 Por favor ingresa el código de aprobación OTP (6 dígitos).");
-                    document.getElementById('yapeOtp').focus();
-                    return;
+                let phoneInput = "";
+                let otpInput = "";
+
+                if (selectedYapeSubOption === 'OTP') {
+                    phoneInput = document.getElementById('yapePhone').value.trim();
+                    otpInput = document.getElementById('yapeOtp').value.trim();
+                    
+                    if (phoneInput.length !== 9 || isNaN(phoneInput)) {
+                        alert("📱 Por favor ingresa un número de celular Yape válido (9 dígitos).");
+                        document.getElementById('yapePhone').focus();
+                        return;
+                    }
+                    if (otpInput.length !== 6 || isNaN(otpInput)) {
+                        alert("🔑 Por favor ingresa el código de aprobación OTP (6 dígitos).");
+                        document.getElementById('yapeOtp').focus();
+                        return;
+                    }
+                } else {
+                    phoneInput = document.getElementById('yapeQrPhone').value.trim();
+                    otpInput = "000000"; // Código por defecto para QR
+                    
+                    if (phoneInput.length !== 9 || isNaN(phoneInput)) {
+                        alert("📱 Por favor ingresa tu número de celular para validar el Yapeo (9 dígitos).");
+                        document.getElementById('yapeQrPhone').focus();
+                        return;
+                    }
                 }
                 
                 yapeRequestJson = {
@@ -853,7 +889,9 @@
                 let unixTimeNow = Math.floor(Date.now() / 1000);
 
                 if (selectedPaymentMethodValue === 'Yape') {
-                    const phoneInput = document.getElementById('yapePhone').value.trim();
+                    const phoneInput = selectedYapeSubOption === 'OTP'
+                        ? document.getElementById('yapePhone').value.trim()
+                        : document.getElementById('yapeQrPhone').value.trim();
                     apiResponseJson = {
                         "success": "true",
                         "action": "authorize",
@@ -863,7 +901,7 @@
                             "transaction_id": "yp_" + Math.random().toString(36).substring(2, 15),
                             "channel": "ecommerce",
                             "state": "AUTORIZADO",
-                            "state_reason": "Pago exitoso con Yape",
+                            "state_reason": selectedYapeSubOption === 'OTP' ? "Pago exitoso con Yape" : "Pago exitoso con QR Yape",
                             "amount": totalCents,
                             "currency": "604",
                             "payment_method": {
@@ -1082,20 +1120,43 @@
             <!-- Formulario Yape -->
             <div id="drawerYapeForm" class="bg-zinc-950 border border-zinc-900 p-4 rounded-xl space-y-3">
                 <div class="flex items-center justify-between border-b border-zinc-900 pb-2">
-                    <span class="text-[10px] font-black text-zinc-400 uppercase tracking-wider">Credenciales de Pago</span>
+                    <span class="text-[10px] font-black text-zinc-400 uppercase tracking-wider">Pago con Yape</span>
                     <span class="text-[9px] bg-[#742384] text-white px-2 py-0.5 rounded font-black tracking-widest">YAPE</span>
                 </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                       <label class="block text-[8px] text-zinc-500 font-bold uppercase tracking-wider mb-1">Celular Yape</label>
-                       <input type="tel" id="yapePhone" maxlength="9" placeholder="969929157" class="w-full bg-zinc-900 border border-zinc-800 text-white px-3 py-2 rounded-lg text-xs focus:border-red-600 focus:outline-none transition-colors font-mono" />
-                    </div>
-                    <div>
-                       <label class="block text-[8px] text-zinc-500 font-bold uppercase tracking-wider mb-1">Código OTP (Yape)</label>
-                       <input type="text" id="yapeOtp" maxlength="6" placeholder="557454" class="w-full bg-zinc-900 border border-zinc-800 text-white px-3 py-2 rounded-lg text-xs focus:border-red-600 focus:outline-none transition-colors font-mono" />
-                    </div>
+
+                <!-- Sub-selector de Yape: OTP vs QR -->
+                <div class="grid grid-cols-2 gap-1 bg-zinc-900 p-1 rounded-lg border border-zinc-800">
+                    <button type="button" onclick="selectYapeOption('OTP')" id="btnYapeOtp" class="py-1.5 rounded-md text-[9px] font-black uppercase tracking-wider text-center transition-all bg-[#742384] text-white">🔑 Código OTP</button>
+                    <button type="button" onclick="selectYapeOption('QR')" id="btnYapeQr" class="py-1.5 rounded-md text-[9px] font-black uppercase tracking-wider text-center transition-all text-zinc-400 hover:text-white">📸 Código QR</button>
                 </div>
-                <p class="text-[9px] text-zinc-500 leading-tight">Ingresa el celular asociado a tu cuenta Yape y el código OTP de 6 dígitos que figura en la aplicación.</p>
+
+                <!-- Opción OTP (Celular + OTP) -->
+                <div id="yapeOtpSection" class="space-y-3">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                           <label class="block text-[8px] text-zinc-500 font-bold uppercase tracking-wider mb-1">Celular Yape</label>
+                           <input type="tel" id="yapePhone" maxlength="9" placeholder="969929157" class="w-full bg-zinc-900 border border-zinc-800 text-white px-3 py-2 rounded-lg text-xs focus:border-red-600 focus:outline-none transition-colors font-mono" />
+                        </div>
+                        <div>
+                           <label class="block text-[8px] text-zinc-500 font-bold uppercase tracking-wider mb-1">Código OTP (Yape)</label>
+                           <input type="text" id="yapeOtp" maxlength="6" placeholder="557454" class="w-full bg-zinc-900 border border-zinc-800 text-white px-3 py-2 rounded-lg text-xs focus:border-red-600 focus:outline-none transition-colors font-mono" />
+                        </div>
+                    </div>
+                    <p class="text-[9px] text-zinc-500 leading-tight">Ingresa el celular asociado a tu cuenta Yape y el código OTP de 6 dígitos que figura en la aplicación.</p>
+                </div>
+
+                <!-- Opción Código QR -->
+                <div id="yapeQrSection" class="hidden flex flex-col items-center justify-center py-2 space-y-2">
+                    <div class="p-2 bg-white rounded-xl shadow-lg border border-zinc-850">
+                        <img src="img/qr_yape.png" alt="Código QR Yape" class="w-32 h-32 object-contain" />
+                    </div>
+                    <p class="text-[9px] text-zinc-400 text-center font-bold">¡Escanea y Yapea directamente el total!</p>
+                    <div class="w-full">
+                       <label class="block text-[8px] text-zinc-500 font-bold uppercase tracking-wider mb-1">Celular desde el que Yapeaste</label>
+                       <input type="tel" id="yapeQrPhone" maxlength="9" placeholder="969929157" class="w-full bg-zinc-900 border border-zinc-800 text-white px-3 py-2 rounded-lg text-xs focus:border-red-600 focus:outline-none transition-colors font-mono" />
+                    </div>
+                    <p class="text-[8px] text-zinc-500 leading-tight text-center">Para validar tu pago, ingresa tu número y haz clic en Confirmar Pedido.</p>
+                </div>
             </div>
 
             <!-- Formulario Tarjeta -->
