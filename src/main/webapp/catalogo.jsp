@@ -100,7 +100,12 @@
                     <span class="text-sm text-white font-extrabold"><%= usuario.getNombre() %></span>
                 </div>
                 
-                <a href="seguimiento.jsp" class="md:hidden bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 p-2.5 rounded-full transition-all text-lg">
+                <button onclick="toggleCartDrawer(true)" class="relative bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 p-2.5 rounded-full transition-all text-lg flex items-center justify-center">
+                    🛒
+                    <span id="headerCartCount" class="absolute -top-1.5 -right-1.5 bg-red-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full min-w-5 h-5 flex items-center justify-center border border-zinc-950">0</span>
+                </button>
+                
+                <a href="seguimiento.jsp" class="hidden md:flex bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 p-2.5 rounded-full transition-all text-lg">
                     🛵
                 </a>
 
@@ -462,6 +467,12 @@
             const totalItems = carrito.reduce((sum, item) => sum + item.cantidad, 0);
             const totalPrecio = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
 
+            // Actualizar contador del menú superior
+            const headerCount = document.getElementById('headerCartCount');
+            if (headerCount) {
+                headerCount.innerText = totalItems;
+            }
+
             if (totalItems > 0) {
                 btn.classList.remove('hidden');
                 document.getElementById('cantidadTotal').innerText = totalItems;
@@ -472,13 +483,331 @@
         }
 
         function irAlCarrito() {
-            const datosSeguros = carrito.map(item => {
-                return item.nombre + "|" + item.ingredientes + "|" + item.precio + "|" + item.cantidad;
-            }).join("||");
+            toggleCartDrawer(true);
+        }
 
-            document.getElementById('inputCarritoJson').value = datosSeguros;
-            document.getElementById('formOcultoCarrito').submit();
+        // --- SISTEMA DEL CARRITO DE NAVEGACIÓN SUPERIOR (CART DRAWER) ---
+        
+        let selectedPaymentMethodValue = 'Yape';
+
+        function toggleCartDrawer(open) {
+            const drawer = document.getElementById('cartDrawer');
+            const backdrop = document.getElementById('cartDrawerBackdrop');
+            if (open) {
+                drawer.classList.remove('translate-x-full');
+                backdrop.classList.remove('hidden');
+                renderDrawerCart();
+            } else {
+                drawer.classList.add('translate-x-full');
+                backdrop.classList.add('hidden');
+            }
+        }
+
+        function selectPaymentMethod(method) {
+            selectedPaymentMethodValue = method;
+            const yapeBtn = document.getElementById('btnPayYape');
+            const cashBtn = document.getElementById('btnPayCash');
+            const yapeForm = document.getElementById('drawerYapeForm');
+            
+            if (method === 'Yape') {
+                yapeBtn.className = "py-3 border border-red-600 bg-red-600/10 text-red-500 rounded-xl text-xs font-black uppercase tracking-wider text-center transition-all";
+                cashBtn.className = "py-3 border border-zinc-900 bg-zinc-900/40 text-zinc-500 rounded-xl text-xs font-bold uppercase tracking-wider text-center transition-all";
+                yapeForm.classList.remove('hidden');
+            } else {
+                cashBtn.className = "py-3 border border-red-600 bg-red-600/10 text-red-500 rounded-xl text-xs font-black uppercase tracking-wider text-center transition-all";
+                yapeBtn.className = "py-3 border border-zinc-900 bg-zinc-900/40 text-zinc-500 rounded-xl text-xs font-bold uppercase tracking-wider text-center transition-all";
+                yapeForm.classList.add('hidden');
+            }
+        }
+
+        function renderDrawerCart() {
+            const container = document.getElementById('drawer-cart-items-container');
+            const totalText = document.getElementById('drawerTotalText');
+            container.innerHTML = '';
+            
+            const totalItems = carrito.reduce((sum, item) => sum + item.cantidad, 0);
+            const totalPrecio = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
+            totalText.innerText = totalPrecio.toFixed(2);
+            
+            if (totalItems === 0) {
+                container.innerHTML = 
+                    '<div class="flex flex-col items-center justify-center h-64 text-center text-zinc-600">' +
+                        '<span class="text-5xl mb-4">🛒</span>' +
+                        '<p class="text-sm font-bold uppercase tracking-wider">Tu carrito está vacío</p>' +
+                        '<p class="text-xs text-zinc-500 mt-1">Agrega pizzas desde la carta</p>' +
+                    '</div>';
+                return;
+            }
+            
+            carrito.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = "p-4 bg-zinc-900/50 border border-zinc-800/80 rounded-xl flex items-center justify-between gap-4";
+                
+                itemDiv.innerHTML = 
+                    '<div class="flex-1">' +
+                        '<h4 class="font-extrabold text-white text-sm uppercase truncate">' + item.nombre + '</h4>' +
+                        '<p class="text-[10px] text-zinc-500 line-clamp-1 mt-0.5">' + item.ingredientes + '</p>' +
+                        '<span class="text-xs font-extrabold text-red-500 block mt-1.5">S/ ' + (item.precio * item.cantidad).toFixed(2) + '</span>' +
+                    '</div>' +
+                    '<div class="flex items-center gap-2.5">' +
+                        '<button onclick="cambiarCantidadDrawer(' + item.id + ', -1)" class="bg-zinc-800 text-zinc-400 w-7 h-7 rounded-md font-bold flex items-center justify-center hover:bg-zinc-700 transition-colors">-</button>' +
+                        '<span class="text-xs font-black text-white w-4 text-center">' + item.cantidad + '</span>' +
+                        '<button onclick="cambiarCantidadDrawer(' + item.id + ', 1)" class="bg-red-600 text-white w-7 h-7 rounded-md font-bold flex items-center justify-center hover:bg-red-700 transition-colors">+</button>' +
+                    '</div>';
+                    
+                container.appendChild(itemDiv);
+            });
+        }
+
+        function cambiarCantidadDrawer(id, cambio) {
+            cambiarCantidad(id, cambio);
+            renderDrawerCart();
+        }
+
+        function procesarPedidoDirecto() {
+            const direccion = document.getElementById('drawerDireccion').value.trim();
+            if (!direccion) {
+                alert("📍 Por favor ingresa una dirección de envío.");
+                document.getElementById('drawerDireccion').focus();
+                return;
+            }
+
+            if (carrito.length === 0) {
+                alert("🛒 Agrega al menos un producto al carrito para ordenar.");
+                return;
+            }
+
+            // Si es Yape, validar datos
+            let yapePhoneVal = "969929157";
+            let yapeOtpVal = "557454";
+            
+            if (selectedPaymentMethodValue === 'Yape') {
+                const phoneInput = document.getElementById('yapePhone').value.trim();
+                const otpInput = document.getElementById('yapeOtp').value.trim();
+                
+                if (phoneInput.length !== 9 || isNaN(phoneInput)) {
+                    alert("📱 Por favor ingresa un número de celular Yape válido (9 dígitos).");
+                    document.getElementById('yapePhone').focus();
+                    return;
+                }
+                if (otpInput.length !== 6 || isNaN(otpInput)) {
+                    alert("🔑 Por favor ingresa el código de aprobación OTP (6 dígitos).");
+                    document.getElementById('yapeOtp').focus();
+                    return;
+                }
+                yapePhoneVal = phoneInput;
+                yapeOtpVal = otpInput;
+            }
+
+            // Datos dinámicos del usuario
+            let nombreCompleto = "<%= usuario.getNombre() %>";
+            let partes = nombreCompleto.split(" ");
+            let firstName = partes[0] || "Cliente";
+            let lastName = partes.slice(1).join(" ") || "Mister Pizza";
+            let email = "<%= usuario.getCorreo() %>";
+            let userPhone = "<%= usuario.getTelefono() %>" || "999835685";
+            if (userPhone === "Sin registro") userPhone = "999835685";
+
+            // Monto total en centavos
+            let totalVal = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
+            let totalCents = Math.round(totalVal * 100).toString();
+            let randomOp = Math.floor(1000000 + Math.random() * 9000000).toString();
+
+            // Construir la carga útil JSON (API Yape requerida)
+            let yapeRequestJson = {
+                "action": "authorize",
+                "channel": "ecommerce",
+                "merchant_code": "b0deb6f3-e51a-48a7-9268-f1441d46f7bd",
+                "merchant_operation_number": randomOp,
+                "payment_method": {
+                    "method_name": "YAPE",
+                    "method_details": {
+                        "callback_url": "https://pay-me.com/callback",
+                        "phone": {
+                            "country_code": "+51",
+                            "subscriber": yapePhoneVal
+                        },
+                        "otp": yapeOtpVal
+                    }
+                },
+                "payment_details": {
+                    "amount": totalCents,
+                    "currency": "604",
+                    "billing": {
+                        "first_name": firstName,
+                        "last_name": lastName,
+                        "email": email,
+                        "phone": {
+                            "country_code": "+51",
+                            "subscriber": userPhone
+                        },
+                        "location": {
+                            "line_1": direccion,
+                            "line_2": "",
+                            "city": "Puno",
+                            "state": "Puno",
+                            "country": "Peru"
+                        }
+                    },
+                    "shipping": {
+                        "first_name": firstName,
+                        "last_name": lastName,
+                        "email": email,
+                        "phone": {
+                            "country_code": "+51",
+                            "subscriber": userPhone
+                        },
+                        "location": {
+                            "line_1": direccion,
+                            "line_2": "",
+                            "city": "Puno",
+                            "state": "Puno",
+                            "country": "Peru"
+                        }
+                    },
+                    "customer": {
+                        "first_name": firstName,
+                        "last_name": lastName,
+                        "email": email,
+                        "phone": {
+                            "country_code": "+51",
+                            "subscriber": userPhone
+                        },
+                        "location": {
+                            "line_1": direccion,
+                            "line_2": "",
+                            "city": "Puno",
+                            "state": "Puno",
+                            "country": "Peru"
+                        }
+                    },
+                    "product_details": carrito.map(item => ({
+                        "name": item.nombre,
+                        "quantity": item.cantidad.toString(),
+                        "price": Math.round(item.precio * 100).toString()
+                    }))
+                }
+            };
+
+            // Mostrar el cargador y volcar el JSON
+            const loader = document.getElementById('drawerLoader');
+            const pre = document.getElementById('apiPayloadText');
+            pre.innerText = JSON.stringify(yapeRequestJson, null, 4);
+            loader.classList.remove('hidden');
+
+            // Simular validación remota del API Pay-Me / Yape
+            setTimeout(() => {
+                // Proceder con guardar el carrito en la sesión por Fetch (AJAX)
+                const datosSeguros = carrito.map(item => {
+                    return item.nombre + "|" + item.ingredientes + "|" + item.precio + "|" + item.cantidad;
+                }).join("||");
+
+                fetch('GuardarCarritoServlet', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+                    },
+                    body: 'carritoJson=' + encodeURIComponent(datosSeguros)
+                })
+                .then(res => {
+                    // Limpiar el carrito local tras ordenar
+                    localStorage.removeItem('misterPizzaCarrito');
+                    // Enviar y finalizar pedido en base de datos
+                    document.getElementById('directoDireccion').value = direccion;
+                    document.getElementById('directoMetodo').value = selectedPaymentMethodValue;
+                    document.getElementById('formCheckoutDirecto').submit();
+                })
+                .catch(err => {
+                    alert("Error simulando conexión de red. Inténtalo de nuevo.");
+                    loader.classList.add('hidden');
+                });
+            }, 3500);
         }
     </script>
+
+    <!-- FORMULARIO OCULTO PARA DIRECT CHECKOUT -->
+    <form id="formCheckoutDirecto" action="ConfirmarPedidoServlet" method="POST" class="hidden">
+        <input type="hidden" name="direccion" id="directoDireccion" />
+        <input type="hidden" name="metodo" id="directoMetodo" />
+    </form>
+
+    <!-- CART DRAWER OVERLAY -->
+    <div id="cartDrawerBackdrop" onclick="toggleCartDrawer(false)" class="hidden fixed inset-0 bg-black/60 z-50 backdrop-blur-sm transition-opacity duration-300"></div>
+    <div id="cartDrawer" class="fixed inset-y-0 right-0 z-50 w-full max-w-md bg-zinc-950 border-l border-zinc-900 shadow-2xl translate-x-full transition-transform duration-300 flex flex-col">
+        
+        <!-- Loader Yape API -->
+        <div id="drawerLoader" class="hidden absolute inset-0 bg-black/95 z-50 flex flex-col items-center justify-center p-6 text-center">
+            <div class="w-16 h-16 border-4 border-red-600 border-t-transparent rounded-full animate-spin mb-6"></div>
+            <h3 class="font-extrabold text-white text-lg mb-2 uppercase tracking-wider">Autorizando Transacción</h3>
+            <p class="text-xs text-zinc-500 max-w-xs mb-6">Conectando con la pasarela de pagos Pay-Me & API Yape...</p>
+            
+            <div class="w-full text-left space-y-3">
+                <span class="text-[9px] font-black text-red-500 uppercase tracking-widest block">Petición API Yape (payload):</span>
+                <pre id="apiPayloadText" class="bg-zinc-900 border border-zinc-800 text-green-400 p-4 rounded-xl text-[10px] font-mono overflow-auto max-h-56 select-all leading-tight"></pre>
+            </div>
+        </div>
+
+        <!-- Header -->
+        <div class="p-6 border-b border-zinc-900 flex justify-between items-center bg-black">
+            <div class="flex items-center gap-2">
+                <span class="text-xl">🛒</span>
+                <h3 class="font-black text-white uppercase tracking-wider text-base">Mi Pedido</h3>
+            </div>
+            <button onclick="toggleCartDrawer(false)" class="text-zinc-500 hover:text-white transition-colors text-lg font-bold">✕</button>
+        </div>
+
+        <!-- Items List -->
+        <div class="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar" id="drawer-cart-items-container">
+            <!-- Rendered via JS -->
+        </div>
+
+        <!-- Footer Drawer -->
+        <div class="p-6 border-t border-zinc-900 bg-black space-y-4">
+            <!-- Formulario de entrega -->
+            <div>
+                <label class="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1.5">📍 Dirección de Entrega</label>
+                <input type="text" id="drawerDireccion" required class="w-full bg-zinc-950 border border-zinc-900 text-white px-4 py-3 rounded-xl text-xs focus:border-red-600 focus:outline-none transition-colors" placeholder="Ej: Av. El Sol 123, Puno" />
+            </div>
+
+            <!-- Método de pago -->
+            <div>
+                <label class="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1.5">💳 Método de Pago</label>
+                <div class="grid grid-cols-2 gap-2">
+                    <button type="button" onclick="selectPaymentMethod('Yape')" id="btnPayYape" class="py-3 border border-red-600 bg-red-600/10 text-red-500 rounded-xl text-xs font-black uppercase tracking-wider text-center transition-all">📱 Yape</button>
+                    <button type="button" onclick="selectPaymentMethod('Efectivo')" id="btnPayCash" class="py-3 border border-zinc-900 bg-zinc-900/40 text-zinc-500 rounded-xl text-xs font-bold uppercase tracking-wider text-center transition-all">💵 Efectivo</button>
+                </div>
+            </div>
+
+            <!-- Formulario Yape -->
+            <div id="drawerYapeForm" class="bg-zinc-950 border border-zinc-900 p-4 rounded-xl space-y-3">
+                <div class="flex items-center justify-between border-b border-zinc-900 pb-2">
+                    <span class="text-[10px] font-black text-zinc-400 uppercase tracking-wider">Credenciales de Pago</span>
+                    <span class="text-[9px] bg-[#742384] text-white px-2 py-0.5 rounded font-black tracking-widest">YAPE</span>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                       <label class="block text-[8px] text-zinc-500 font-bold uppercase tracking-wider mb-1">Celular Yape</label>
+                       <input type="tel" id="yapePhone" maxlength="9" placeholder="969929157" class="w-full bg-zinc-900 border border-zinc-800 text-white px-3 py-2 rounded-lg text-xs focus:border-red-600 focus:outline-none transition-colors font-mono" />
+                    </div>
+                    <div>
+                       <label class="block text-[8px] text-zinc-500 font-bold uppercase tracking-wider mb-1">Código OTP (Yape)</label>
+                       <input type="text" id="yapeOtp" maxlength="6" placeholder="557454" class="w-full bg-zinc-900 border border-zinc-800 text-white px-3 py-2 rounded-lg text-xs focus:border-red-600 focus:outline-none transition-colors font-mono" />
+                    </div>
+                </div>
+                <p class="text-[9px] text-zinc-500 leading-tight">Ingresa el celular asociado a tu cuenta Yape y el código OTP de 6 dígitos que figura en la aplicación.</p>
+            </div>
+
+            <!-- Resumen de total y botón de pago -->
+            <div class="pt-2 border-t border-zinc-900 flex justify-between items-center">
+                <div>
+                    <span class="text-[9px] text-zinc-500 uppercase font-bold tracking-widest block">Total Pedido</span>
+                    <span class="text-2xl font-black text-white">S/ <span id="drawerTotalText">0.00</span></span>
+                </div>
+                <button id="btnProcesarOrden" onclick="procesarPedidoDirecto()" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3.5 rounded-xl font-black uppercase tracking-widest text-xs shadow-lg transition-transform hover:scale-[1.02] active:scale-[0.98]">
+                    Confirmar Pedido 🚀
+                </button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
