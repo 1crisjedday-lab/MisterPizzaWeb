@@ -829,32 +829,199 @@
 
             loaderTitle.innerText = selectedPaymentMethodValue === 'Yape' ? 'Autorizando Transacción Yape' : 'Procesando Pago con Tarjeta';
             loaderSub.innerText = 'Conectando con la pasarela de pagos Pay-Me...';
+            const labelSpan = document.getElementById('payloadLabelText');
+            if (labelSpan) {
+                labelSpan.innerText = 'Petición API Pay-Me (Request Payload):';
+                labelSpan.className = 'text-[9px] font-black text-red-500 uppercase tracking-widest block';
+            }
             pre.innerText = JSON.stringify(yapeRequestJson, null, 4);
+            pre.className = 'bg-zinc-900 border border-zinc-800 text-green-400 p-4 rounded-xl text-[10px] font-mono overflow-auto max-h-56 select-all leading-tight';
             loader.classList.remove('hidden');
 
+            // 1. Mostrar Respuesta de la API simulada después de 2.2 segundos
             setTimeout(() => {
-                const datosSeguros = carrito.map(item => {
-                    return item.nombre + "|" + item.ingredientes + "|" + item.precio + "|" + item.cantidad;
-                }).join("||");
+                loaderTitle.innerText = selectedPaymentMethodValue === 'Yape' ? 'Transacción Yape Autorizada' : 'Transacción Tarjeta Autorizada';
+                loaderSub.innerText = 'Respuesta recibida correctamente. Registrando pedido...';
+                if (labelSpan) {
+                    labelSpan.innerText = 'Respuesta API Pay-Me (Response Payload):';
+                    labelSpan.className = 'text-[9px] font-black text-green-500 uppercase tracking-widest block';
+                }
+                pre.className = 'bg-zinc-900 border border-zinc-800 text-cyan-400 p-4 rounded-xl text-[10px] font-mono overflow-auto max-h-56 select-all leading-tight';
 
-                fetch('GuardarCarritoServlet', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
-                    },
-                    body: 'carritoJson=' + encodeURIComponent(datosSeguros)
-                })
-                .then(res => {
-                    localStorage.removeItem('misterPizzaCarrito');
-                    document.getElementById('directoDireccion').value = direccion;
-                    document.getElementById('directoMetodo').value = selectedPaymentMethodValue;
-                    document.getElementById('formCheckoutDirecto').submit();
-                })
-                .catch(err => {
-                    alert("Error procesando pago.");
-                    loader.classList.add('hidden');
-                });
-            }, 3500);
+                let apiResponseJson = {};
+                let timeNow = new Date().toISOString();
+                let unixTimeNow = Math.floor(Date.now() / 1000);
+
+                if (selectedPaymentMethodValue === 'Yape') {
+                    const phoneInput = document.getElementById('yapePhone').value.trim();
+                    apiResponseJson = {
+                        "success": "true",
+                        "action": "authorize",
+                        "merchant_code": "b0deb6f3-e51a-48a7-9268-f1441d46f7bd",
+                        "merchant_operation_number": randomOp,
+                        "transaction": {
+                            "transaction_id": "yp_" + Math.random().toString(36).substring(2, 15),
+                            "channel": "ecommerce",
+                            "state": "AUTORIZADO",
+                            "state_reason": "Pago exitoso con Yape",
+                            "amount": totalCents,
+                            "currency": "604",
+                            "payment_method": {
+                                "method_name": "YAPE",
+                                "method_details": {
+                                    "phone": {
+                                        "country_code": "+51",
+                                        "subscriber": phoneInput
+                                    }
+                                }
+                            },
+                            "processor_response": {
+                                "authorization_code": Math.floor(100000 + Math.random() * 900000).toString(),
+                                "brand_transaction_id": "YP" + Math.floor(100 + Math.random() * 900) + "B",
+                                "result_message": {
+                                    "code": "00",
+                                    "description": "Approval and completed successfully"
+                                }
+                            },
+                            "additional_fields": null,
+                            "lifecycle": [
+                                {
+                                    "state": "REGISTRADO",
+                                    "date": {
+                                        "utc_time": timeNow,
+                                        "unix_time": unixTimeNow
+                                    }
+                                },
+                                {
+                                    "state": "PENDIENTE",
+                                    "date": {
+                                        "utc_time": timeNow,
+                                        "unix_time": unixTimeNow
+                                    }
+                                },
+                                {
+                                    "state": "AUTORIZADO",
+                                    "date": {
+                                        "utc_time": timeNow,
+                                        "unix_time": unixTimeNow
+                                    }
+                                }
+                            ]
+                        },
+                        "meta": {
+                            "status": {
+                                "code": "00",
+                                "message_ilgn": [
+                                    {
+                                        "locale": "es_PE",
+                                        "value": "Procesado correctamente"
+                                    }
+                                ]
+                            }
+                        }
+                    };
+                } else {
+                    const panInput = document.getElementById('cardPan').value.trim();
+                    const maskedPan = panInput.substring(0, 6) + "********" + panInput.substring(12);
+                    apiResponseJson = {
+                        "success": "true",
+                        "action": "authorize",
+                        "merchant_code": "b0deb6f3-e51a-48a7-9268-f1441d46f7bd",
+                        "merchant_operation_number": randomOp,
+                        "transaction": {
+                            "transaction_id": "cd_" + Math.random().toString(36).substring(2, 15),
+                            "channel": "ecommerce",
+                            "state": "AUTORIZADO",
+                            "state_reason": "Pago exitoso con Tarjeta",
+                            "amount": totalCents,
+                            "currency": "604",
+                            "payment_method": {
+                                "method_name": "CARD",
+                                "method_details": {
+                                    "masked_pan": maskedPan,
+                                    "brand": panInput.startsWith('4') ? 'VISA' : 'MASTERCARD',
+                                    "bin": panInput.substring(0, 6),
+                                    "last_pan": panInput.substring(12),
+                                    "card_type": "DEBIT",
+                                    "card_country": "PE",
+                                    "issuer": "BANCO DE CREDITO DEL PERU - BCP"
+                                }
+                            },
+                            "processor_response": {
+                                "authorization_code": Math.floor(100000 + Math.random() * 900000).toString(),
+                                "brand_transaction_id": "CD" + Math.floor(100 + Math.random() * 900) + "C",
+                                "result_message": {
+                                    "code": "00",
+                                    "description": "Approval and completed successfully"
+                                }
+                            },
+                            "additional_fields": null,
+                            "lifecycle": [
+                                {
+                                    "state": "REGISTRADO",
+                                    "date": {
+                                        "utc_time": timeNow,
+                                        "unix_time": unixTimeNow
+                                    }
+                                },
+                                {
+                                    "state": "PENDIENTE",
+                                    "date": {
+                                        "utc_time": timeNow,
+                                        "unix_time": unixTimeNow
+                                    }
+                                },
+                                {
+                                    "state": "AUTORIZADO",
+                                    "date": {
+                                        "utc_time": timeNow,
+                                        "unix_time": unixTimeNow
+                                    }
+                                }
+                            ]
+                        },
+                        "meta": {
+                            "status": {
+                                "code": "00",
+                                "message_ilgn": [
+                                    {
+                                        "locale": "es_PE",
+                                        "value": "Procesado correctamente"
+                                    }
+                                ]
+                            }
+                        }
+                    };
+                }
+
+                pre.innerText = JSON.stringify(apiResponseJson, null, 4);
+
+                // 2. Esperar otros 2.3 segundos para enviar el pedido a PostgreSQL
+                setTimeout(() => {
+                    const datosSeguros = carrito.map(item => {
+                        return item.nombre + "|" + item.ingredientes + "|" + item.precio + "|" + item.cantidad;
+                    }).join("||");
+
+                    fetch('GuardarCarritoServlet', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+                        },
+                        body: 'carritoJson=' + encodeURIComponent(datosSeguros)
+                    })
+                    .then(res => {
+                        localStorage.removeItem('misterPizzaCarrito');
+                        document.getElementById('directoDireccion').value = direccion;
+                        document.getElementById('directoMetodo').value = selectedPaymentMethodValue;
+                        document.getElementById('formCheckoutDirecto').submit();
+                    })
+                    .catch(err => {
+                        alert("Error procesando pago.");
+                        loader.classList.add('hidden');
+                    });
+                }, 2300);
+
+            }, 2200);
         }
     </script>
 
@@ -875,7 +1042,7 @@
             <p id="loaderSubText" class="text-xs text-zinc-500 max-w-xs mb-6">Conectando con la pasarela de pagos Pay-Me...</p>
             
             <div class="w-full text-left space-y-3">
-                <span class="text-[9px] font-black text-red-500 uppercase tracking-widest block">Petición API Pay-Me (payload):</span>
+                <span id="payloadLabelText" class="text-[9px] font-black text-red-500 uppercase tracking-widest block">Petición API Pay-Me (payload):</span>
                 <pre id="apiPayloadText" class="bg-zinc-900 border border-zinc-800 text-green-400 p-4 rounded-xl text-[10px] font-mono overflow-auto max-h-56 select-all leading-tight"></pre>
             </div>
         </div>
