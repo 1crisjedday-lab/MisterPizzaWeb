@@ -7,11 +7,12 @@
     <title>Admin - Dashboard Mister Pizza</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="css/style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Recarga la página automáticamente cada 15 segundos para buscar nuevas ventas
+        // Recarga la página automáticamente cada 30 segundos para buscar nuevas ventas
         setInterval(function(){
             window.location.reload();
-        }, 15000);
+        }, 30000);
     </script>
 </head>
 <body class="bg-zinc-950 text-zinc-100 min-h-screen flex">
@@ -74,10 +75,137 @@
             </div>
         </div>
 
-        <div class="bg-zinc-900 rounded-xl shadow-lg border border-zinc-800 p-6">
+        <div class="bg-zinc-900 rounded-xl shadow-lg border border-zinc-800 p-6 mb-8">
             <h2 class="text-lg font-black text-white mb-2 uppercase tracking-wide">Análisis de Operaciones</h2>
             <p class="text-sm text-zinc-400">Las métricas mostradas se actualizan en tiempo real basándose en los estados de cierre de órdenes procesadas en el panel de cocina.</p>
+            
+            <!-- Contenedores de gráficos en grid responsivo -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                <div class="bg-zinc-950 p-6 rounded-xl border border-zinc-800/80">
+                    <h3 class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4">🍕 Pizzas más vendidas</h3>
+                    <div class="relative h-72">
+                        <canvas id="pizzasChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="bg-zinc-950 p-6 rounded-xl border border-zinc-800/80">
+                    <h3 class="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-4">📈 Registros diarios</h3>
+                    <div class="relative h-72">
+                        <canvas id="registrosChart"></canvas>
+                    </div>
+                </div>
+            </div>
         </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                fetch('DashboardDataServlet')
+                    .then(response => response.json())
+                    .then(data => {
+                        // 1. Gráfico de Barras: Pizzas más vendidas
+                        const pizzasCtx = document.getElementById('pizzasChart').getContext('2d');
+                        const pizzasLabels = data.pizzasMasVendidas.map(item => item.nombre);
+                        const pizzasValues = data.pizzasMasVendidas.map(item => item.cantidad);
+
+                        new Chart(pizzasCtx, {
+                            type: 'bar',
+                            data: {
+                                labels: pizzasLabels,
+                                datasets: [{
+                                    label: 'Unidades vendidas',
+                                    data: pizzasValues,
+                                    backgroundColor: 'rgba(220, 38, 38, 0.65)',
+                                    borderColor: 'rgba(220, 38, 38, 1)',
+                                    borderWidth: 1.5,
+                                    borderRadius: 6,
+                                    barPercentage: 0.6
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: { display: false },
+                                    tooltip: {
+                                        backgroundColor: '#18181b',
+                                        titleColor: '#fff',
+                                        bodyColor: '#e4e4e7',
+                                        borderColor: '#27272a',
+                                        borderWidth: 1
+                                    }
+                                },
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        grid: { color: '#27272a' },
+                                        ticks: { color: '#a1a1aa', font: { weight: 'bold' } }
+                                    },
+                                    x: {
+                                        grid: { display: false },
+                                        ticks: { color: '#a1a1aa', font: { weight: 'bold' } }
+                                    }
+                                }
+                            }
+                        });
+
+                        // 2. Gráfico de Líneas: Registros diarios
+                        const registrosCtx = document.getElementById('registrosChart').getContext('2d');
+                        const registrosLabels = data.registrosDiarios.map(item => item.fecha);
+                        const registrosValues = data.registrosDiarios.map(item => item.cantidad);
+
+                        new Chart(registrosCtx, {
+                            type: 'line',
+                            data: {
+                                labels: registrosLabels,
+                                datasets: [{
+                                    label: 'Nuevos usuarios',
+                                    data: registrosValues,
+                                    borderColor: 'rgba(239, 68, 68, 1)',
+                                    backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                                    fill: true,
+                                    tension: 0.4,
+                                    borderWidth: 2.5,
+                                    pointBackgroundColor: 'rgba(239, 68, 68, 1)',
+                                    pointBorderColor: '#18181b',
+                                    pointBorderWidth: 1.5,
+                                    pointRadius: 4,
+                                    pointHoverRadius: 6
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: { display: false },
+                                    tooltip: {
+                                        backgroundColor: '#18181b',
+                                        titleColor: '#fff',
+                                        bodyColor: '#e4e4e7',
+                                        borderColor: '#27272a',
+                                        borderWidth: 1
+                                    }
+                                },
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        grid: { color: '#27272a' },
+                                        ticks: { 
+                                            color: '#a1a1aa', 
+                                            stepSize: 1,
+                                            font: { weight: 'bold' }
+                                        }
+                                    },
+                                    x: {
+                                        grid: { color: '#27272a' },
+                                        ticks: { color: '#a1a1aa', font: { weight: 'bold' } }
+                                    }
+                                }
+                            }
+                        });
+                    })
+                    .catch(err => console.error('Error cargando los datos de los gráficos:', err));
+            });
+        </script>
     </main>
 </body>
 </html>

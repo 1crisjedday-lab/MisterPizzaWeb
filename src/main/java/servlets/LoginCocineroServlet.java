@@ -19,34 +19,50 @@ public class LoginCocineroServlet extends HttpServlet {
         String clave = request.getParameter("clave");
 
         try (Connection con = Conexion.getConnection()) {
-            String sql = "SELECT id, nombre, telefono, rol_id, fecha_registro FROM usuarios WHERE correo = ? AND clave = ?";
+            String sql = "SELECT id, nombre, telefono, rol_id, fecha_registro, clave FROM usuarios WHERE correo = ?";
             PreparedStatement ps = con.prepareStatement(sql);
             ps.setString(1, correo);
-            ps.setString(2, clave);
             
-            ResultSet rs = ps.executeQuery();
-            
-            if (rs.next()) {
-                int rolId = rs.getInt("rol_id");
-                
-                if (rolId == 2 || rolId == 3) {
-                    Usuario user = new Usuario(
-                        rs.getInt("id"), 
-                        rs.getString("nombre"), 
-                        correo, 
-                        rs.getString("telefono"), 
-                        rolId, 
-                        rs.getTimestamp("fecha_registro")
-                    );
-                    request.getSession().setAttribute("usuarioLogueado", user);
-                    response.sendRedirect("cocina_kanban.jsp");
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    String hashAlmacenado = rs.getString("clave");
+                    boolean claveValida = false;
+                    
+                    if (hashAlmacenado != null && hashAlmacenado.startsWith("$2a$")) {
+                        claveValida = org.mindrot.jbcrypt.BCrypt.checkpw(clave, hashAlmacenado);
+                    } else {
+                        // Fallback para contraseñas heredadas sin encriptar
+                        claveValida = clave.equals(hashAlmacenado);
+                    }
+
+                    if (claveValida) {
+                        int rolId = rs.getInt("rol_id");
+                        
+                        if (rolId == 2 || rolId == 3) {
+                            Usuario user = new Usuario(
+                                rs.getInt("id"), 
+                                rs.getString("nombre"), 
+                                correo, 
+                                rs.getString("telefono"), 
+                                rolId, 
+                                rs.getTimestamp("fecha_registro")
+                            );
+                            HttpSession session = request.getSession();
+                            session.setMaxInactiveInterval(900); // 15 minutos en segundos
+                            session.setAttribute("usuarioLogueado", user);
+                            response.sendRedirect("cocina_kanban.jsp");
+                        } else {
+                            request.setAttribute("error", "No tienes permisos de acceso.");
+                            request.getRequestDispatcher("login_cocinero.jsp").forward(request, response);
+                        }
+                    } else {
+                        request.setAttribute("error", "Credenciales incorrectas.");
+                        request.getRequestDispatcher("login_cocinero.jsp").forward(request, response);
+                    }
                 } else {
-                    request.setAttribute("error", "No tienes permisos de acceso.");
+                    request.setAttribute("error", "Credenciales incorrectas.");
                     request.getRequestDispatcher("login_cocinero.jsp").forward(request, response);
                 }
-            } else {
-                request.setAttribute("error", "Credenciales incorrectas.");
-                request.getRequestDispatcher("login_cocinero.jsp").forward(request, response);
             }
         } catch (Exception e) {
             request.setAttribute("error", "Error: " + e.getMessage());

@@ -24,6 +24,7 @@ public class RegistroServlet extends HttpServlet {
         String telefono = request.getParameter("telefono");
         String dni = request.getParameter("dni");
         String clave = request.getParameter("password");
+        String hashedClave = org.mindrot.jbcrypt.BCrypt.hashpw(clave, org.mindrot.jbcrypt.BCrypt.gensalt(12));
 
         // 2. Definimos la consulta SQL (Asegúrate de que la tabla 'usuarios' tenga estas columnas)
         String sql = "INSERT INTO usuarios (nombre, correo, telefono, dni, clave, rol_id) VALUES (?, ?, ?, ?, ?, 1)";
@@ -36,7 +37,7 @@ public class RegistroServlet extends HttpServlet {
             ps.setString(2, correo);
             ps.setString(3, telefono);
             ps.setString(4, dni);
-            ps.setString(5, clave);
+            ps.setString(5, hashedClave);
 
             // 4. Ejecutamos la inserción
             int filas = ps.executeUpdate();

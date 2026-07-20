@@ -24,34 +24,47 @@ public class LoginClienteServlet extends HttpServlet {
         String clave = request.getParameter("password");
 
         // Consulta SQL para verificar el cliente con sus datos completos
-        String sql = "SELECT id, nombre, telefono, rol_id, fecha_registro FROM usuarios WHERE correo = ? AND clave = ?";
+        String sql = "SELECT id, nombre, telefono, rol_id, fecha_registro, clave FROM usuarios WHERE correo = ?";
 
         try (Connection con = Conexion.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setString(1, email);
-            ps.setString(2, clave);
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
+                    String hashAlmacenado = rs.getString("clave");
+                    boolean claveValida = false;
                     
-                    // 1. Iniciamos la sesión con el objeto Usuario completo
-                    Usuario usuario = new Usuario(
-                        rs.getInt("id"), 
-                        rs.getString("nombre"), 
-                        email, 
-                        rs.getString("telefono"), 
-                        rs.getInt("rol_id"), 
-                        rs.getTimestamp("fecha_registro")
-                    );
-                    HttpSession session = request.getSession();
-                    session.setAttribute("usuarioLogueado", usuario);
+                    if (hashAlmacenado != null && hashAlmacenado.startsWith("$2a$")) {
+                        claveValida = org.mindrot.jbcrypt.BCrypt.checkpw(clave, hashAlmacenado);
+                    } else {
+                        // Fallback para contraseñas heredadas sin encriptar
+                        claveValida = clave.equals(hashAlmacenado);
+                    }
 
-                    // 2. Enrutamiento directo: Todo el que entra por aquí va al catálogo
-                    response.sendRedirect("catalogo.jsp");
-                    
+                    if (claveValida) {
+                        // 1. Iniciamos la sesión con el objeto Usuario completo
+                        Usuario usuario = new Usuario(
+                            rs.getInt("id"), 
+                            rs.getString("nombre"), 
+                            email, 
+                            rs.getString("telefono"), 
+                            rs.getInt("rol_id"), 
+                            rs.getTimestamp("fecha_registro")
+                        );
+                        HttpSession session = request.getSession();
+                        session.setMaxInactiveInterval(900); // 15 minutos en segundos
+                        session.setAttribute("usuarioLogueado", usuario);
+
+                        // 2. Enrutamiento directo: Todo el que entra por aquí va al catálogo
+                        response.sendRedirect("catalogo.jsp");
+                    } else {
+                        // Contraseña incorrecta
+                        response.sendRedirect("login_cliente.jsp?error=credenciales");
+                    }
                 } else {
-                    // Contraseña o correo incorrecto
+                    // Correo incorrecto
                     response.sendRedirect("login_cliente.jsp?error=credenciales");
                 }
             }

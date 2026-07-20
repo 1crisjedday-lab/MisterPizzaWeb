@@ -7,6 +7,7 @@
     <title>Acceso Restringido - Mister Pizza</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="css/style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body class="bg-zinc-950 min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden">
     
@@ -24,11 +25,28 @@
             
             <% 
                 String error = request.getParameter("error");
-                if ("credenciales".equals(error)) {
+                if (error != null) {
+                    String msg = "Ocurrió un error en el acceso.";
+                    if ("credenciales".equals(error)) {
+                        msg = "Acceso denegado. Credenciales no válidas para esta área de personal.";
+                    } else if ("bd".equals(error)) {
+                        msg = "Error de conexión con la base de datos.";
+                    } else if ("dashboard".equals(error)) {
+                        msg = "Sesión no válida o error al cargar el dashboard.";
+                    }
             %>
-                <div class="bg-red-500/10 border border-red-500/50 text-red-500 p-3 rounded-md text-sm font-bold text-center mb-6">
-                    Acceso denegado. Credenciales no válidas para esta área.
-                </div>
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Acceso Denegado',
+                            text: '<%= msg %>',
+                            confirmButtonColor: '#dc2626',
+                            background: '#18181b',
+                            color: '#fff'
+                        });
+                    });
+                </script>
             <%  } %>
 
             <form action="LoginPersonalServlet" method="POST" class="space-y-6">
@@ -38,7 +56,7 @@
                     <div class="relative">
                         <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
                         
-                        <input type="email" id="email" name="email" required 
+                        <input type="email" id="email" name="email" required maxlength="100" pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
                                class="w-full bg-zinc-950 border border-zinc-800 text-white pl-10 pr-4 py-3 rounded-md focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-colors placeholder-zinc-700" 
                                placeholder="admin@misterpizza.com" />
                     </div>
@@ -49,7 +67,7 @@
                     <div class="relative">
                         <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
                         
-                        <input type="password" id="password" name="password" required 
+                        <input type="password" id="password" name="password" required minlength="4" maxlength="50"
                                class="w-full bg-zinc-950 border border-zinc-800 text-white pl-10 pr-4 py-3 rounded-md focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-colors placeholder-zinc-700" 
                                placeholder="••••••••" />
                     </div>
@@ -65,5 +83,41 @@
             &larr; Volver al Inicio
         </a>
     </div>
+
+    <script>
+        document.querySelector('form').addEventListener('submit', function(event) {
+            if (!this.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+                
+                let errorMessage = "Por favor, completa correctamente todos los campos obligatorios.";
+                const invalidInput = this.querySelector(':invalid');
+                if (invalidInput) {
+                    const label = this.querySelector(`label[for="${invalidInput.id}"]`) || invalidInput.closest('div').querySelector('label');
+                    const labelText = label ? label.textContent.replace(':', '').trim() : invalidInput.name;
+                    
+                    if (invalidInput.validity.valueMissing) {
+                        errorMessage = `El campo "${labelText}" es obligatorio y no puede estar vacío.`;
+                    } else if (invalidInput.validity.typeMismatch || invalidInput.validity.patternMismatch) {
+                        errorMessage = `El formato del campo "${labelText}" no es válido.`;
+                    } else if (invalidInput.validity.tooShort) {
+                        errorMessage = `La contraseña es demasiado corta (mínimo ${invalidInput.minLength} caracteres).`;
+                    } else if (invalidInput.validity.tooLong) {
+                        errorMessage = `El campo "${labelText}" supera la longitud permitida.`;
+                    }
+                }
+                
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Formulario Incompleto',
+                    text: errorMessage,
+                    confirmButtonColor: '#dc2626',
+                    background: '#18181b',
+                    color: '#fff'
+                });
+                return false;
+            }
+        });
+    </script>
 </body>
 </html>

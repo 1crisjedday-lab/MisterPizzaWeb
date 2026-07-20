@@ -23,39 +23,53 @@ public class LoginPersonalServlet extends HttpServlet {
         String email = request.getParameter("email");
         String clave = request.getParameter("password");
 
-        String sql = "SELECT id, nombre, telefono, rol_id, fecha_registro FROM usuarios WHERE correo = ? AND clave = ?";
+        String sql = "SELECT id, nombre, telefono, rol_id, fecha_registro, clave FROM usuarios WHERE correo = ?";
 
         try (Connection con = Conexion.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setString(1, email);
-            ps.setString(2, clave);
 
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    int rolUsuario = rs.getInt("rol_id");
+                    String hashAlmacenado = rs.getString("clave");
+                    boolean claveValida = false;
+                    
+                    if (hashAlmacenado != null && hashAlmacenado.startsWith("$2a$")) {
+                        claveValida = org.mindrot.jbcrypt.BCrypt.checkpw(clave, hashAlmacenado);
+                    } else {
+                        // Fallback para contraseñas heredadas sin encriptar
+                        claveValida = clave.equals(hashAlmacenado);
+                    }
 
-                    // FILTRO DE SEGURIDAD: Solo dejamos pasar al rol 2 (Cocinero) y 3 (Admin)
-                    if (rolUsuario == 2 || rolUsuario == 3) {
-                        
-                        Usuario usuario = new Usuario(
-                            rs.getInt("id"), 
-                            rs.getString("nombre"), 
-                            email, 
-                            rs.getString("telefono"), 
-                            rolUsuario, 
-                            rs.getTimestamp("fecha_registro")
-                        );
-                        HttpSession session = request.getSession();
-                        session.setAttribute("usuarioLogueado", usuario);
+                    if (claveValida) {
+                        int rolUsuario = rs.getInt("rol_id");
 
-                        if (rolUsuario == 3) {
-                            response.sendRedirect("AdminDashboardServlet"); // Admin al dashboard
+                        // FILTRO DE SEGURIDAD: Solo dejamos pasar al rol 2 (Cocinero) y 3 (Admin)
+                        if (rolUsuario == 2 || rolUsuario == 3) {
+                            
+                            Usuario usuario = new Usuario(
+                                rs.getInt("id"), 
+                                rs.getString("nombre"), 
+                                email, 
+                                rs.getString("telefono"), 
+                                rolUsuario, 
+                                rs.getTimestamp("fecha_registro")
+                            );
+                            HttpSession session = request.getSession();
+                            session.setMaxInactiveInterval(900); // 15 minutos en segundos
+                            session.setAttribute("usuarioLogueado", usuario);
+
+                            if (rolUsuario == 3) {
+                                response.sendRedirect("AdminDashboardServlet"); // Admin al dashboard
+                            } else {
+                                response.sendRedirect("cocina_kanban.jsp"); // Cocinero a su panel
+                            }
                         } else {
-                            response.sendRedirect("cocina_kanban.jsp"); // Cocinero a su panel
+                            // Si un cliente (rol 1) intenta entrar por aquí, lo botamos
+                            response.sendRedirect("login_personal.jsp?error=credenciales");
                         }
                     } else {
-                        // Si un cliente (rol 1) intenta entrar por aquí, lo botamos
                         response.sendRedirect("login_personal.jsp?error=credenciales");
                     }
                 } else {

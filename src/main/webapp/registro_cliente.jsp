@@ -7,6 +7,7 @@
     <title>Registro - Mister Pizza</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="css/style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body class="bg-zinc-950 min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden">
     
@@ -21,53 +22,77 @@
         </div>
 
         <div class="bg-zinc-900/80 backdrop-blur-md p-8 rounded-2xl shadow-2xl border border-zinc-800">
+            <% 
+                String error = request.getParameter("error");
+                if (error != null) { 
+                    String msg = "Ocurrió un error en el sistema.";
+                    if ("registro_fallido".equals(error)) {
+                        msg = "No se pudo registrar la cuenta. Por favor, intente con otro correo.";
+                    } else if ("bd".equals(error)) {
+                        msg = "Error de base de datos. Intente más tarde.";
+                    }
+            %>
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error de Registro',
+                            text: '<%= msg %>',
+                            confirmButtonColor: '#dc2626',
+                            background: '#18181b',
+                            color: '#fff'
+                        });
+                    });
+                </script>
+            <% } %>
+
             <form action="RegistroServlet" method="POST" class="space-y-5">
                 
                 <div>
-                    <label class="block text-zinc-400 text-xs font-bold uppercase tracking-widest mb-2">Nombre Completo</label>
+                    <label class="block text-zinc-400 text-xs font-bold uppercase tracking-widest mb-2" for="nombre">Nombre Completo</label>
                     <div class="relative">
                         <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                        <input type="text" name="nombre" required 
+                        <input type="text" id="nombre" name="nombre" required maxlength="100"
                                class="w-full bg-zinc-950 border border-zinc-800 text-white pl-10 pr-4 py-3 rounded-md focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-colors placeholder-zinc-700" 
                                placeholder="Ej: Juan Pérez" />
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-zinc-400 text-xs font-bold uppercase tracking-widest mb-2">Correo Electrónico</label>
+                    <label class="block text-zinc-400 text-xs font-bold uppercase tracking-widest mb-2" for="email">Correo Electrónico</label>
                     <div class="relative">
                         <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                        <input type="email" name="email" required 
+                        <input type="email" id="email" name="email" required maxlength="100" pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
                                class="w-full bg-zinc-950 border border-zinc-800 text-white pl-10 pr-4 py-3 rounded-md focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-colors placeholder-zinc-700" 
                                placeholder="ejemplo@correo.com" />
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-zinc-400 text-xs font-bold uppercase tracking-widest mb-2">Teléfono</label>
+                    <label class="block text-zinc-400 text-xs font-bold uppercase tracking-widest mb-2" for="telefono">Teléfono</label>
                     <div class="relative">
                         <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
-                        <input type="tel" name="telefono" required 
+                        <input type="tel" id="telefono" name="telefono" required maxlength="15" pattern="^[0-9]{9,15}$"
                                class="w-full bg-zinc-950 border border-zinc-800 text-white pl-10 pr-4 py-3 rounded-md focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-colors placeholder-zinc-700" 
                                placeholder="Ej: 987654321" />
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-zinc-400 text-xs font-bold uppercase tracking-widest mb-2">DNI</label>
+                    <label class="block text-zinc-400 text-xs font-bold uppercase tracking-widest mb-2" for="dni">DNI</label>
                     <div class="relative">
                         <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path></svg>
-                        <input type="text" name="dni" maxlength="8" required 
+                        <input type="text" id="dni" name="dni" maxlength="8" minlength="8" required pattern="^[0-9]{8}$"
                                class="w-full bg-zinc-950 border border-zinc-800 text-white pl-10 pr-4 py-3 rounded-md focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-colors placeholder-zinc-700" 
                                placeholder="12345678" />
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-zinc-400 text-xs font-bold uppercase tracking-widest mb-2">Contraseña</label>
+                    <label class="block text-zinc-400 text-xs font-bold uppercase tracking-widest mb-2" for="password">Contraseña</label>
                     <div class="relative">
                         <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                        <input type="password" name="password" required 
+                        <input type="password" id="password" name="password" required minlength="6" maxlength="50"
                                class="w-full bg-zinc-950 border border-zinc-800 text-white pl-10 pr-4 py-3 rounded-md focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition-colors placeholder-zinc-700" 
                                placeholder="••••••••" />
                     </div>
@@ -89,5 +114,49 @@
             &larr; Volver al Inicio
         </a>
     </div>
+
+    <script>
+        document.querySelector('form').addEventListener('submit', function(event) {
+            if (!this.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+                
+                let errorMessage = "Por favor, completa correctamente todos los campos obligatorios.";
+                const invalidInput = this.querySelector(':invalid');
+                if (invalidInput) {
+                    const label = this.querySelector(`label[for="${invalidInput.id}"]`) || invalidInput.closest('div').querySelector('label');
+                    const labelText = label ? label.textContent.replace(':', '').trim() : invalidInput.name;
+                    
+                    if (invalidInput.validity.valueMissing) {
+                        errorMessage = `El campo "${labelText}" es obligatorio y no puede estar vacío.`;
+                    } else if (invalidInput.validity.typeMismatch || invalidInput.validity.patternMismatch) {
+                        if (invalidInput.id === 'email') {
+                            errorMessage = "El correo electrónico debe tener un formato válido (ejemplo@dominio.com).";
+                        } else if (invalidInput.id === 'telefono') {
+                            errorMessage = "El teléfono debe contener solo dígitos (mínimo 9).";
+                        } else if (invalidInput.id === 'dni') {
+                            errorMessage = "El DNI debe contener exactamente 8 dígitos.";
+                        } else {
+                            errorMessage = `El formato del campo "${labelText}" no es válido.`;
+                        }
+                    } else if (invalidInput.validity.tooShort) {
+                        errorMessage = `El campo "${labelText}" es demasiado corto (mínimo ${invalidInput.minLength} caracteres).`;
+                    } else if (invalidInput.validity.tooLong) {
+                        errorMessage = `El campo "${labelText}" supera la longitud permitida.`;
+                    }
+                }
+                
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Formulario Incompleto',
+                    text: errorMessage,
+                    confirmButtonColor: '#dc2626',
+                    background: '#18181b',
+                    color: '#fff'
+                });
+                return false;
+            }
+        });
+    </script>
 </body>
 </html>
