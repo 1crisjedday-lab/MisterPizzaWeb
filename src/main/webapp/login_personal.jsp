@@ -44,7 +44,7 @@
                     </script>
                     <% } %>
 
-                        <form action="LoginPersonalServlet" method="POST" class="space-y-6">
+                        <form action="/LoginPersonalServlet" method="POST" class="space-y-6">
 
                             <div>
                                 <label class="block text-zinc-400 text-xs font-bold uppercase tracking-widest mb-2"
