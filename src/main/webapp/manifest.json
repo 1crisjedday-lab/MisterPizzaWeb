@@ -1,0 +1,13 @@
+{
+  "background_color": "#09090b",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "Mister Pizza",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "MisterPizza",
+  "start_url": "/",
+  "theme_color": "#dc2626",
+  "id": "com.misterpizza.app",
+  "description": "Sistema de gestión, catálogo y pedidos online de Mister Pizza."
+}
