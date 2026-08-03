@@ -7,10 +7,10 @@ import java.sql.SQLException;
 public class Conexion {
     
     // Configura estos datos según tu instalación de PostgreSQL
-    private static final String URL = "jdbc:postgresql://localhost:5432/mister_pizza";
-    private static final String USER = "postgres";
+    private static final String URL = "jdbc:postgresql://dpg-d9nuu361egvs738r1mjg-a.ohio-postgres.render.com:5432/misterpizza_db";
+    private static final String USER = "misterpizza_db_user";
     // REEMPLAZA 'tu_password' por la contraseña que pusiste al instalar PostgreSQL
-    private static final String PASS = "admin"; 
+    private static final String PASS = "cuV6UE2Sx6ACFqvE43KyLNYsnO440UfR";
 
     public static Connection getConnection() {
         Connection con = null;
