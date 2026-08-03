@@ -9,5 +9,17 @@
   "start_url": "/",
   "theme_color": "#dc2626",
   "id": "com.misterpizza.app",
-  "description": "Sistema de gestión, catálogo y pedidos online de Mister Pizza."
+  "description": "Sistema de gestión, catálogo y pedidos online de Mister Pizza.",
+  "icons": [
+    {
+      "src": "icons/android/launchericon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/android/launchericon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
 }
