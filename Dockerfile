@@ -5,8 +5,8 @@ COPY pom.xml .
 COPY src ./src
 RUN mvn clean package -DskipTests
 
-# Stage 2: Run Tomcat (Usamos la versión 9 para máxima compatibilidad)
-FROM tomcat:9.0-jdk11-temurin
+# Stage 2: Run Tomcat 10 (Compatible nativamente con Jakarta EE)
+FROM tomcat:10.1-jdk11-temurin
 WORKDIR /usr/local/tomcat
 
 # Copy the built war file as ROOT.war to serve it at the root context path (/)
