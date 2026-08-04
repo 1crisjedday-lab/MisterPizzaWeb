@@ -52,7 +52,8 @@
         <div id="formNuevoProducto" class="hidden bg-zinc-900 p-6 md:p-8 rounded-xl shadow-lg border border-zinc-800 mb-8 transition-all">
             <h2 id="tituloFormulario" class="text-xl font-black text-white mb-6 uppercase tracking-wide">Agregar Nuevo Producto</h2>
             
-            <form action="GestorProductosServlet" method="POST" enctype="multipart/form-data" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- EL FORMULARIO AHORA ES SIMPLE SIN EL ENCTYPE MULTIPART -->
+            <form action="GestorProductosServlet" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 
                 <input type="hidden" name="id_producto" id="input_id" />
 
@@ -82,25 +83,10 @@
                 </div>
                 
                 <div class="md:col-span-2 bg-black p-4 rounded-md border border-zinc-800">
-                    <label class="block text-xs font-bold text-red-500 uppercase tracking-widest mb-3">Imagen del Producto (Elige una opción)</label>
-                    
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-xs text-zinc-400 mb-1">Opción A: Pegar enlace de internet (Recomendado, no se borra)</label>
-                            <input type="text" name="imagen_url_web" id="input_url_web" placeholder="https://ejemplo.com/pizza.jpg" class="w-full bg-zinc-950 border border-zinc-800 text-white px-4 py-2 rounded-md focus:border-red-600 focus:outline-none transition-colors text-sm" />
-                        </div>
-                        
-                        <div class="flex items-center gap-4">
-                            <div class="flex-1 border-t border-zinc-800"></div>
-                            <span class="text-zinc-600 text-xs font-bold uppercase">O también</span>
-                            <div class="flex-1 border-t border-zinc-800"></div>
-                        </div>
-
-                        <div>
-                            <label class="block text-xs text-zinc-400 mb-1">Opción B: Subir archivo temporal <span id="nota_foto" class="text-red-500 font-bold ml-2 hidden">(Opcional al editar)</span></label>
-                            <input type="file" name="imagen_foto" id="input_foto" accept="image/*" class="w-full bg-zinc-950 border border-zinc-800 text-zinc-400 px-4 py-2 rounded-md focus:border-red-600 focus:outline-none transition-colors file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-bold file:bg-zinc-800 file:text-white hover:file:bg-zinc-700 text-sm" />
-                        </div>
-                    </div>
+                    <label class="block text-xs font-bold text-red-500 uppercase tracking-widest mb-3">Enlace (URL) de la Imagen del Producto</label>
+                    <!-- ÚNICO INPUT PARA LA IMAGEN (SOLO TEXTO) -->
+                    <input type="url" name="imagen_producto" id="input_imagen_producto" placeholder="Ej: https://i.imgur.com/mifoto.jpg" required class="w-full bg-zinc-950 border border-zinc-800 text-white px-4 py-3 rounded-md focus:border-red-600 focus:outline-none transition-colors" />
+                    <p class="text-zinc-500 text-xs mt-2">Puedes subir imágenes gratis en <a href="https://postimages.org/" target="_blank" class="text-red-500 underline">postimages.org</a> y pegar aquí el enlace directo.</p>
                 </div>
                 
                 <div class="md:col-span-2 flex justify-end gap-4 mt-4 border-t border-zinc-800 pt-6">
@@ -138,17 +124,16 @@
             document.getElementById('input_ingredientes').value = '';
             document.getElementById('input_categoria').value = 'Pizzas Clásicas'; // Valor por defecto
             
-            // Limpiar campos de imagen
-            document.getElementById('input_url_web').value = '';
-            document.getElementById('input_foto').value = '';
+            // Limpiar campo de imagen
+            document.getElementById('input_imagen_producto').value = '';
             
-            document.getElementById('nota_foto').classList.add('hidden');
             document.getElementById('tituloFormulario').innerText = 'AGREGAR NUEVO PRODUCTO';
             document.getElementById('btn_guardar').innerText = 'GUARDAR PRODUCTO';
             formDiv.classList.remove('hidden');
         }
 
-        function prepararEdicion(id, nombre, precio, ingredientes, categoria) {
+        // AHORA RECIBE LA URL DE LA IMAGEN COMO PARÁMETRO
+        function prepararEdicion(id, nombre, precio, ingredientes, categoria, imagen_url) {
             document.getElementById('input_id').value = id;
             document.getElementById('input_nombre').value = nombre;
             document.getElementById('input_precio').value = precio;
@@ -156,11 +141,8 @@
             
             document.getElementById('input_categoria').value = categoria && categoria !== 'null' ? categoria : 'Pizzas Clásicas';
             
-            // Limpiar campos de imagen para que no haya confusión al editar
-            document.getElementById('input_url_web').value = '';
-            document.getElementById('input_foto').value = '';
-            
-            document.getElementById('nota_foto').classList.remove('hidden');
+            // Llenar el campo de la imagen para que el gerente vea qué enlace tiene
+            document.getElementById('input_imagen_producto').value = imagen_url;
             
             document.getElementById('tituloFormulario').innerText = 'EDITAR PRODUCTO (ID: ' + id + ')';
             document.getElementById('btn_guardar').innerText = 'ACTUALIZAR PRODUCTO';
@@ -201,7 +183,8 @@
                             <td class="p-4 text-xs text-zinc-400 max-w-xs truncate">\${prod.ingredientes}</td>
                             <td class="p-4 font-black text-white text-center">S/ \${prod.precio.toFixed(2)}</td>
                             <td class="p-4 text-center whitespace-nowrap">
-                                <button onclick="prepararEdicion(\${prod.id}, '\${prod.nombre}', \${prod.precio}, '\${prod.ingredientes}', '\${prod.categoria}')" class="bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-2 rounded-md transition-colors font-bold text-xs uppercase tracking-widest mr-2 border border-zinc-700">✏️ Editar</button>
+                                <!-- AQUÍ SE ENVÍA LA URL AL BOTÓN DE EDITAR -->
+                                <button onclick="prepararEdicion(\${prod.id}, '\${prod.nombre}', \${prod.precio}, '\${prod.ingredientes}', '\${prod.categoria}', '\${prod.imagen_url}')" class="bg-zinc-800 hover:bg-zinc-700 text-white px-3 py-2 rounded-md transition-colors font-bold text-xs uppercase tracking-widest mr-2 border border-zinc-700">✏️ Editar</button>
                                 <button onclick="confirmarEliminacion(\${prod.id}, '\${prod.nombre}')" class="bg-red-900/30 hover:bg-red-600 text-red-500 hover:text-white px-3 py-2 rounded-md transition-colors font-bold text-xs uppercase tracking-widest border border-red-900/50">🗑️ Borrar</button>
                             </td>
                         `;
