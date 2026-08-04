@@ -5,7 +5,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Mister Pizza - Sabor Artesanal y Caliente</title>
-    <!-- 👇 AGREGA ESTA LÍNEA AQUÍ 👇 -->
+    
     <link rel="manifest" href="manifest.json" />
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="css/style.css" />
@@ -195,7 +195,7 @@
         <h3 id="titulo-categoria" class="text-zinc-500 font-extrabold text-sm mb-8 uppercase tracking-widest">NUESTRO MENÚ</h3>
 
         <!-- Grilla de productos -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="catalogo-contenedor">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6" id="catalogo-contenedor">
             <!-- Renderizado dinámico -->
         </div>
     </section>
@@ -366,37 +366,43 @@
             pizzasFiltradas.forEach(pizza => {
                 const item = carrito.find(i => i.id === pizza.id);
                 const div = document.createElement('div');
-                div.className = "bg-zinc-900/60 backdrop-blur-md rounded-2xl overflow-hidden flex flex-col h-full border border-zinc-800/80 premium-card";
+                
+                // MODO RESPONSIVE: flex-row en celular (horizontal), flex-col en PC (vertical)
+                div.className = "bg-zinc-900/60 backdrop-blur-md rounded-2xl overflow-hidden flex flex-row sm:flex-col h-auto sm:h-full border border-zinc-800/80 premium-card";
 
                 let botonesHTML = '';
                 if (!item) {
-                    botonesHTML = '<button onclick="agregarAlCarrito(' + pizza.id + ')" class="w-full bg-red-600 text-white font-extrabold py-3.5 rounded-xl text-xs hover:bg-red-700 transition-colors uppercase tracking-widest shadow-lg">Añadir al Pedido</button>';
+                    // Botón de añadir más compacto en celular
+                    botonesHTML = '<button onclick="agregarAlCarrito(' + pizza.id + ')" class="w-full bg-red-600 text-white font-extrabold py-2.5 sm:py-3.5 rounded-xl text-[10px] sm:text-xs hover:bg-red-700 transition-colors uppercase tracking-widest shadow-lg">Añadir</button>';
                 } else {
-                    botonesHTML = '<div class="flex items-center justify-between bg-zinc-900 border border-zinc-800 p-1.5 rounded-xl">' +
-                                    '<button onclick="cambiarCantidad(' + pizza.id + ', -1)" class="bg-zinc-800 text-zinc-300 rounded-lg w-10 h-10 font-bold flex items-center justify-center hover:bg-zinc-700 hover:text-white transition-colors">-</button>' +
-                                    '<span class="font-extrabold text-white text-base">' + item.cantidad + '</span>' +
-                                    '<button onclick="cambiarCantidad(' + pizza.id + ', 1)" class="bg-red-600 text-white rounded-lg w-10 h-10 font-bold flex items-center justify-center hover:bg-red-700 transition-colors">+</button>' +
+                    // Botones +/- más pequeños en celular
+                    botonesHTML = '<div class="flex items-center justify-between bg-zinc-900 border border-zinc-800 p-1 sm:p-1.5 rounded-xl">' +
+                                    '<button onclick="cambiarCantidad(' + pizza.id + ', -1)" class="bg-zinc-800 text-zinc-300 rounded-lg w-8 h-8 sm:w-10 sm:h-10 font-bold flex items-center justify-center hover:bg-zinc-700 hover:text-white transition-colors">-</button>' +
+                                    '<span class="font-extrabold text-white text-sm sm:text-base">' + item.cantidad + '</span>' +
+                                    '<button onclick="cambiarCantidad(' + pizza.id + ', 1)" class="bg-red-600 text-white rounded-lg w-8 h-8 sm:w-10 sm:h-10 font-bold flex items-center justify-center hover:bg-red-700 transition-colors">+</button>' +
                                   '</div>';
                 }
                 
                 div.innerHTML = 
-                    '<div class="relative w-full pt-[70%] bg-zinc-950/40 border-b border-zinc-800/50 overflow-hidden">' +
-                        '<img src="' + pizza.imagen_url + '" alt="' + pizza.nombre + '" class="absolute top-0 left-0 w-full h-full object-contain p-4 drop-shadow-[0_8px_16px_rgba(0,0,0,0.5)] zoom-img" />' +
-                        '<span class="absolute top-3 right-3 bg-black/60 backdrop-blur-md text-[10px] font-black text-red-400 border border-red-500/20 px-2 py-0.5 rounded-md uppercase tracking-wider">⭐ 4.8</span>' +
+                    // Contenedor de la imagen (Izquierda en celular, Arriba en PC)
+                    '<div class="relative w-[120px] sm:w-full shrink-0 sm:pt-[70%] bg-zinc-950/40 border-r sm:border-r-0 sm:border-b border-zinc-800/50 overflow-hidden flex items-center justify-center p-2 sm:p-0">' +
+                        '<img src="' + pizza.imagen_url + '" alt="' + pizza.nombre + '" class="sm:absolute sm:top-0 sm:left-0 w-24 h-24 sm:w-full sm:h-full object-contain sm:p-4 drop-shadow-[0_8px_16px_rgba(0,0,0,0.5)] zoom-img" />' +
+                        '<span class="absolute top-2 left-2 sm:top-3 sm:left-auto sm:right-3 bg-black/60 backdrop-blur-md text-[9px] sm:text-[10px] font-black text-red-400 border border-red-500/20 px-1.5 py-0.5 rounded-md uppercase tracking-wider">⭐ 4.8</span>' +
                     '</div>' +
-                    '<div class="p-5 flex flex-col flex-1">' +
-                        '<div class="mb-3">' +
-                            '<h3 class="font-extrabold text-white text-lg leading-tight uppercase tracking-wide truncate">' + pizza.nombre + '</h3>' +
+                    // Contenedor de detalles (Derecha en celular, Abajo en PC)
+                    '<div class="p-3 sm:p-5 flex flex-col flex-1 overflow-hidden">' +
+                        '<div class="mb-1 sm:mb-3">' +
+                            '<h3 class="font-extrabold text-white text-sm sm:text-lg leading-tight uppercase tracking-wide truncate">' + pizza.nombre + '</h3>' +
                         '</div>' +
-                        '<div class="mb-5 flex-1">' +
-                            '<p class="text-xs text-zinc-400 line-clamp-2 leading-relaxed font-medium">' + pizza.ingredientes + '</p>' +
+                        '<div class="mb-2 sm:mb-5 flex-1">' +
+                            '<p class="text-[10px] sm:text-xs text-zinc-400 line-clamp-1 sm:line-clamp-2 leading-relaxed font-medium">' + pizza.ingredientes + '</p>' +
                         '</div>' +
-                        '<div class="flex items-center justify-between gap-4 mt-auto pt-4 border-t border-zinc-800/30">' +
+                        '<div class="flex items-center justify-between gap-2 mt-auto pt-2 sm:pt-4 border-t border-zinc-800/30">' +
                             '<div class="flex flex-col">' +
-                                '<span class="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">Precio</span>' +
-                                '<span class="font-black text-white text-lg">S/ ' + pizza.precio.toFixed(2) + '</span>' +
+                                '<span class="text-[9px] sm:text-[10px] text-zinc-500 uppercase tracking-widest font-bold hidden sm:block">Precio</span>' +
+                                '<span class="font-black text-white text-sm sm:text-lg">S/ ' + pizza.precio.toFixed(2) + '</span>' +
                             '</div>' +
-                            '<div class="flex-1 max-w-[150px]">' +
+                            '<div class="flex-1 max-w-[100px] sm:max-w-[150px]">' +
                                 botonesHTML +
                             '</div>' +
                         '</div>' +
